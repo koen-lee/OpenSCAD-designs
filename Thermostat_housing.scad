@@ -141,7 +141,7 @@ if($preview)
 size = [80,53,23];
 pcbheight = 15;
 standoff = 6.4;
-/*difference(){
+difference(){
     union(){
         housing_tray(thickness, size);
         translate([standoff,standoff,0]) 
@@ -156,7 +156,7 @@ standoff = 6.4;
     
     translate([thickness+1, thickness+1, pcbheight])
         thermostat();
-}*/
+}/*/
     
 translate([0,60,0])
 difference(){
@@ -164,4 +164,5 @@ difference(){
     translate([1,1, -5])
         thermostat();
 }
+*/
   
