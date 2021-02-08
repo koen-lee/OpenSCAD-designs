@@ -80,8 +80,10 @@ module belt(){
     }
 }
 
-belt_node();
-rotate([0,-25])
-translate([0,0,-1])
-    buckle();
-belt();
+//belt_node();
+rotate([-90,0,0]){
+    rotate([0,-25])
+    translate([0,0,-1])
+        buckle();
+    belt();
+}
