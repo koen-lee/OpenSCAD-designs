@@ -49,11 +49,11 @@ module belt_node()
             polygon([
             [0,0],
             [8,0],
-            [8,1.2],
-            [5,1.3],
+            [8,1.1],
+            [5,1.2],
             [2,2.6],
             [2.1,1.2],
-            [0,1.2],
+            [0,1.1],
             ]);
         }
         
@@ -83,7 +83,9 @@ module belt(){
 //belt_node();
 rotate([-90,0,0]){
     rotate([0,-25])
-    translate([0,0,-1])
+    translate([0,0,65])
+    rotate([0,-22])
+    translate([0,0,-80])
         buckle();
     belt();
 }
