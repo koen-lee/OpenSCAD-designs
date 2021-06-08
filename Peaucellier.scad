@@ -54,7 +54,7 @@ module crank() {
 
 // if not previewing, show print layout
 inPreview = $preview;
-angle = 0;
+angle = inPreview?115*sin(360*$t):0;
 $fn=32;
 if( inPreview )
 {
