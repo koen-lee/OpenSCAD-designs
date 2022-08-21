@@ -8,12 +8,34 @@ module wire_tray()
         translate([radius, 0])
         {
             $fn=32;
+            //lower wire
             circle(d=6.06);
-            translate([0,-3])
-                square(6.06,center=true);
-            translate([6,38.6])
+            polygon([
+                    [-5,-7],
+                    [5,-7], 
+                    [3.03,-3],
+                    [3.03,0],
+                    [-3.03,0],
+                    [-3.03,-3]               
+                ]);
+            //upper wire
+            translate([6,37.6])
                 circle(d=8.08);
         }
+    }
+}
+
+module mounting(angle)
+{    
+    radius=450;
+    translate([-radius,0,0])
+    rotate([0,0,angle])
+    translate([radius,0,0])
+    {
+        translate([0,0,32])
+            cube([99,6,3], center=true);
+        translate([0,0,43])
+            cube([99,6,3], center=true);
     }
 }
 
@@ -29,11 +51,13 @@ module blob() {
             {
                 offset(r=-2)
                 polygon([
-                    [-10,-6],
-                    [8,-6],
+                    [-7,-5],
+                    [7,-5],
                     [6,30],
-                    [6,60],
-                    [-10,60]
+                    [6,40],
+                    [0,60],
+                    [-9,60],
+                    [-7,40]
                 
                 ]);
             }
@@ -49,23 +73,10 @@ module inset() {
         cube([99,35,70], center=true);    
 }
 
-module mounting(angle)
-{    
-    radius=450;
-    translate([-radius,0,0])
-    rotate([0,0,angle])
-    translate([radius,0,0])
-    {
-        translate([0,0,33])
-            cube([99,6,3], center=true);
-        translate([0,0,44])
-            cube([99,6,3], center=true);
-    }
-}
 
 difference(){
     blob();
-    wire_tray();
+  %  wire_tray();
     rotate([0,-30,0])
         inset();
     mounting(3.2);
