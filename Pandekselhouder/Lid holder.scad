@@ -76,7 +76,7 @@ module inset() {
 
 difference(){
     blob();
-  %  wire_tray();
+    wire_tray();
     rotate([0,-30,0])
         inset();
     mounting(3.2);
