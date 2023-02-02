@@ -32,25 +32,57 @@ union(){
                         text(dow[i],halign="center");
         }     
     }
-    cylinder(d=10, h=25, $fn=7);
+    rotate([0,0,-360/28])
+        cylinder(d=10, h=25, $fn=7);
 }
 translate([110,0,0])
 {
     difference()
     {
-        cylinder(d=100, h=2, $fn=14);            
-        cylinder(d=10.1, h=25, $fn=7, center=true);
+        cylinder(d=100, h=2, $fn=14);  
+        rotate([0,0,-360/28])          
+            cylinder(d=10.1, h=25, $fn=7, center=true);
         translate([0,0,-1])
         difference()
         {
             cube(70);
-            rotate([0,0,-360/7])
-                
+            rotate([0,0,-360/7])                
             cube(80);
         }
-        
-        
-        translate([-20,20,-1])
+        //eye
+        translate([-20,20,1])
             cylinder(d=10,h=4,$fn=129);
+        
+        l=[0,5,8,5,5,8,5];
+        o=[0,-1,0,1,-1,0,1];
+        // cut out
+        for(i=[1:6])
+        {
+            rotate([0,0,i*360/7-360/14])
+            {
+                translate([o[i],7,0])
+                    cube([l[i],1.1,9], center=true);
+            }     
+        }
+        rotate([0,0,3*360/7])
+        {
+            translate([0,7,0])
+                cube([1,14,9], center=true);
+            translate([2,10,0])
+                cube([1,7,9], center=true);
+            translate([-2,10,0])
+                cube([1,7,9], center=true);
+        }  
+        rotate([0,0,6*360/7])
+        { 
+            translate([2,10,0])
+                cube([1,7,9], center=true); 
+        }  
+        
+        rotate([0,0,0*360/7])
+        { 
+            translate([-2,10,0])
+                cube([1,7,9], center=true); 
+        }  
     }
 }
