@@ -59,6 +59,6 @@ module mesh() {
     }
 }
 
-translate([-10,0,2])
+//translate([-10,0,2])
 pickup();
-mesh();
+//mesh();
