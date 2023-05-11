@@ -1,7 +1,7 @@
 z = [0,0,1];
 $fn=60;
 
-idler_offset = 7;
+idler_offset = 20;
 lids = false;
 module rotor()
 {
@@ -33,7 +33,7 @@ module rotor()
     }
 }
  
-module valve(l, r)
+module valve(l, rot, end=false, endD = 5)
 {
     difference(){          
         union(){
@@ -41,46 +41,55 @@ module valve(l, r)
                 cylinder( d=5, h=5);
             translate([0,0,10])
                 cylinder( d=5, h=5);
-            translate([l,0,5])
-                cylinder( d=5, h=5);
+            if(end) {
+                translate([l,0,5])
+                    cylinder( d=endD, h=4.9);
+
+            } else {
+                translate([l,0,0])
+                    cylinder( d=endD, h=4.9);
+                translate([l,0,10])
+                    cylinder( d=endD, h=4.9);
+            }
             translate([0,-1.5,0])
-            rotate(z*r)
+            rotate(z*rot)
                 cube([l,1,15]);
         }
         
         translate([0,0,-1])
             cylinder( d=2, h=50);
         translate([l,0,-1])
-            cylinder( d=2, h=50); 
+            cylinder( d=endD-3, h=50); 
         
         translate([0,0,5])
             cylinder( d=5, h=5);
-        translate([l,0,-0.01])
-            cylinder( d=5, h=5);
-        translate([l,0,10])
-            cylinder( d=5, h=5.01);
     }
 }
 
-module valve_pair(xy2,xy1)
+module valve_pair(xy2,xy1,end)
 {
     diff = xy2-xy1;
-    distance = norm(diff);
+    dist = norm(diff);
     angle_between_points = atan2(diff[1],diff[0]);
-    l=30;
-    
-    angle_for_distance = acos(distance/(2*l));
-    xy3 = [l*cos(angle_for_distance),l*sin(angle_for_distance)];
+    la = 45;
+    lb = 22;
+    // law of cosines = 
+    gamma = acos((la*la+lb*lb-dist*dist)/(2*la*lb));
+    beta = acos((dist*dist+la*la-lb*lb)/(2*dist*la));
+    alpha = 180-gamma-beta;
+    echo(alpha=alpha, beta=beta, gamma=gamma);
+    echo(angle_between_points=angle_between_points);
+    xy3 = [la*cos(beta),la*sin(beta)];
     translate(xy1) {
         rotate(z*angle_between_points) {
-            rotate(z*angle_for_distance)
-                valve(l,0);
+            rotate(z*beta)
+                valve(la,3, true); 
             translate(xy3)
-            rotate(-z*angle_for_distance)
-                valve(l,0);
+            rotate(-z*(alpha))
+                valve(lb,0,end,7);
         }
     }
-    surface = (distance * l * sin(angle_for_distance))/2;
+    surface = (dist * lb * sin(alpha))/2;
     echo( surface = surface);
 }
 
@@ -145,6 +154,6 @@ color("blue")
 color("red")
     translate(5*z) {
         valve_pair([x1_idler,y1_idler],[x1_rotor,y1_rotor]);
-        valve_pair([x2_idler,y2_idler],[x2_rotor,y2_rotor]);
+        valve_pair([x2_idler,y2_idler],[x2_rotor,y2_rotor], true);
     }
  
