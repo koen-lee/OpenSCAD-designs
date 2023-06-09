@@ -1,6 +1,6 @@
 d_frame = 17.6;
 $fn=32;
-mount_l = 50;
+mount_l = 80;
 
 
 module torus(inner, thick)
@@ -56,23 +56,24 @@ module sp_pt(where)
 }
 module guard() 
 {   
+    l_half = mount_l/2;
     hull() {
-        sp_pt([25,0,0]);
-        sp_pt([-25,0,0]);
-        sp_pt([30,0,30]);
-        sp_pt([-25,0,45]);
+        sp_pt([l_half,0,0]);
+        sp_pt([-l_half,0,0]);
+        sp_pt([l_half+5,0,30]);
+        sp_pt([-l_half,0,55]);
     }
     hull() {
-        sp_pt([30,0,30]);
-        sp_pt([-25,0,45]);
-        sp_pt([-10,0,60]); 
-        sp_pt([40,0,60]);
+        sp_pt([l_half+5,0,30]);
+        sp_pt([-l_half,0,55]);
+        sp_pt([15-l_half,0,70]); 
+        sp_pt([l_half+25,0,70]);
     }
     hull() {
-        sp_pt([-10,0,60]);
-        sp_pt([40,0,60]);
-        sp_pt([10,20,65]);
-        sp_pt([40,20,65]);
+        sp_pt([15-l_half,0,70]);
+        sp_pt([l_half+25,0,70]);
+        sp_pt([-l_half+35,20,75]);
+        sp_pt([l_half+25,20,75]);
     }
 }
 
@@ -82,21 +83,21 @@ difference()
         mount();
              
         translate([0,1,0])
-        rotate([0,0,-5])
+        rotate([0,0,-3])
             guard();
     }
     
-    translate([20,d_frame/2,0])
+    translate([-mount_l/2+10,d_frame/2,-1])
     ring(d_frame+5, 2, 4);
-    translate([-20,d_frame/2,0])
+    translate([mount_l/2-10,d_frame/2,-1])
     ring(d_frame+5, 2, 4);
     
 
     translate([0,d_frame/2,0])
     rotate([0,90,0])   
     {
-        cylinder(d=d_frame,h=71, center=true);
+        cylinder(d=d_frame,h=mount_l+10, center=true);
         translate([d_frame/2,0,0])
-            cube([d_frame,d_frame,71], center=true);
+            cube([d_frame,d_frame,mount_l+10], center=true);
     }
 }
