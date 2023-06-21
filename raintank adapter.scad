@@ -1,10 +1,10 @@
 $fn= 32;
 
-module adapter( outer_d, slot_w, extralength =0 )
+module adapter( outer_d, spigot_l, slot_w, slot_l=0, extralength = 0 )
 {
     translate([0,0,-extralength/2])
-        cylinder(d1=outer_d-1, d2=outer_d, h=25+0.5*extralength);
-    translate([0,0,25])
+        cylinder(d1=outer_d-1, d2=outer_d, h=spigot_l+0.5*extralength);
+    translate([0,0,spigot_l])
     hull(){
         cylinder(d=outer_d, h=0.1, center=true);
         intersection(){
@@ -18,19 +18,19 @@ module adapter( outer_d, slot_w, extralength =0 )
             cube([outer_d, 0.1, slot_w+extralength]);
     }
     
-    translate([0,0,25+extralength])
+    translate([0,0,spigot_l+extralength])
         translate([-outer_d/2,extralength/2])
-            cube([outer_d, outer_d/2 + extralength, slot_w]);
+            cube([outer_d, outer_d/2 + extralength+slot_l, slot_w]);
 }
 
 difference() {
-    adapter(35, 10);
-    adapter(33, 8,1);
+    adapter(35, 25, 10 );
+    adapter(33, 25, 8, 0, 1);
 }
 translate([36,0,0])
 
 
 difference() {
-    adapter(28,7);
-    adapter(26, 5,1);
+    adapter(28, 20, 7.5,10);
+    adapter(26, 20, 5.5,10, 1);
 }
