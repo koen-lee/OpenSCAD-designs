@@ -34,13 +34,13 @@ module adapter( outer_d, spigot_l, slot_w, slot_h, slot_l=0, extralength = 0 )
 }
 
 difference() {
-    adapter(35, 25, 10 );
-    adapter(33, 25, 8, 0, 1);
+    adapter(35, 25, 10, 35 );
+    adapter(33, 25, 8, 33, 0, 1);
 }
 translate([36,0,0])
 
 
 difference() {
-    adapter(28, 20, 7.5,10);
-    adapter(26, 20, 5.5,10, 1);
+    adapter(28, 20, 7.5, 32.5,10);
+    adapter(26, 20, 5.5, 30.5,10, 1);
 }
