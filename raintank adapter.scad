@@ -33,14 +33,20 @@ module adapter( outer_d, spigot_l, slot_w, slot_h, slot_l=0, extralength = 0 )
      
 }
 
+rotate([135,0,0]){
+    translate([0,0,-1.7])
 difference() {
-    adapter(35, 25, 10, 35 );
-    adapter(33, 25, 8, 33, 0, 1);
+    adapter(35.5, 30, 9.5, 35, 10 );
+    adapter(33.0, 30, 7.5, 33, 10, 1);
 }
-translate([36,0,0])
+
+///*/
+translate([39,0,0])
 
 
 difference() {
-    adapter(28, 20, 7.5, 32.5,10);
-    adapter(26, 20, 5.5, 30.5,10, 1);
+    adapter(40, 25, 12, 38,1);
+    adapter(37.5, 25, 10, 36,1, 1);
+}
+//*/
 }
