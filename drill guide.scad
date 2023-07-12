@@ -21,9 +21,9 @@ module material_saver_half()
 {
     translate([0.5,-15,-15])
     hull()    {
-        translate([20,0,-20])
-        cube([20,30,70]);
         cube([20,30,30]); 
+        translate([20,-10,-20])
+        cube([20,40,70]);
     }
 }
 module material_saver()
