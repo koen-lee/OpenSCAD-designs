@@ -88,7 +88,7 @@ module housing() {
                 for(z = [0,height])
                     for(y=[0,depth])
                         translate([x,y,z])
-                            sphere(2, $fn=16);                               
+                            sphere(1, $fn=16);                               
         }       
         scope();   
         material_saver();
