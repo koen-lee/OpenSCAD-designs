@@ -37,7 +37,8 @@ module fan() {
 }
 
 module fan_mount1() {   
-$fn=64;    
+    $fn=64;
+    // Fan connection    
     difference() {
         cylinder(d=130, h=2);
         for(rot=[0:90:360]){
@@ -64,7 +65,7 @@ $fn=64;
                          [63,8]]);
     }    
     for(rot=[0:90:360]){
-        rotate([0,0,rot])
+        rotate([0,0,rot+15])
         linear_extrude(40, twist=-30)
                 polygon([[65, 0],
                          [67, 4],
@@ -78,7 +79,7 @@ $fn=64;
             cylinder(h=5, d=125, center=true );
                     
             for(rot=[0:90:360]){
-                rotate([0,0,rot])
+                rotate([0,0,rot+56])
                     translate([65,0,0])
                     scale([1,3,1])
                     cylinder(d=1.5,h=2, center=true);
@@ -91,6 +92,7 @@ $fn=64;
 module fan_mount2() {   
 $fn=64;
     translate([0,0,43]) {
+        
         // Zigzag
         for(rot=[45:90:360]){
             rotate([0,0,rot])
@@ -100,7 +102,7 @@ $fn=64;
                              [63,8]]);
         }    
         for(rot=[45:90:360]){
-            rotate([0,0,rot])
+            rotate([0,0,rot+15])
             linear_extrude(40, twist=-30)
                     polygon([[65, 0],
                              [67, 4],
@@ -112,7 +114,7 @@ $fn=64;
             cylinder(h=5, d=125, center=true );
                     
             for(rot=[0:90:360]){
-                rotate([0,0,rot])
+                rotate([0,0,rot+56])
                     translate([65,0,0])
                     scale([1,3,1])
                     cylinder(d=1.5,h=2, center=true);
@@ -127,7 +129,7 @@ $fn=64;
                 cylinder(h=5, d=100, center=true );
                         
                 for(rot=[0:90:360]){
-                    rotate([0,0,rot])
+                    rotate([0,0,rot+11])
                         translate([60,0,0]) 
                         cylinder(d1=6, d2= 4,h=3, center=true);
                         
@@ -138,20 +140,25 @@ $fn=64;
 }
 
 module intake_adapter() {
-     // Intake ring         
+    $fn=64;
+        
     translate([0,0,85]) {
-        difference() {
-            cylinder(h=1, d=135); 
-            cylinder(h=5, d=100, center=true );
-                    
-            for(rot=[0:90:360]){
-                rotate([0,0,rot])
-                    translate([60,0,0]) 
-                    cylinder(d1=4, d2= 4,h=3, center=true);
-                    
+     // Intake ring         
+        intersection(){
+            difference() {
+                cylinder(h=1, d=135);
+                cylinder(h=5, d=100, center=true );
+                        
+                for(rot=[0:90:360]){
+                    rotate([0,0,rot])
+                        translate([60,0,0]) 
+                        cylinder(d1=4, d2= 4,h=3, center=true);               
+                }
             }
+            rotate([0,0,45])cube([111,111,120], center=true);
         }
-        offset = [-10,-10,20];
+        // Square-circle adapter
+        offset = [0,0,20];
         z = [0,0,1];
         difference() {
             hull() {
@@ -166,7 +173,7 @@ module intake_adapter() {
                 translate([0,0,0.99])
                     cylinder(h=1, d=100);
                 translate(offset+0.1*z)
-                    cube([94,94,1], center=true);
+                    cube([93,93,6], center=true);
             }
         }
         
@@ -174,18 +181,23 @@ module intake_adapter() {
             translate(offset+2*z)
                 cube([95.8,95.8,4], center=true); 
             translate(offset)
-                cube([94,94,10], center=true);        
+                cube([93,93,10], center=true);        
         }
     }
-    
-        
+    translate([-48,0,108])
+        rotate([0,45,0])
+            cube([3,94,1.5], center=true);
+
 }
 
 if( $preview )
 {    translate([0,0, 2])
         fan();
 }
-fan_mount1();
-fan_mount2();
+
 color("lightblue")
 intake_adapter();
+rotate([0,0,-11]){
+    fan_mount1();
+    fan_mount2();
+}
