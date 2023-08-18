@@ -139,19 +139,46 @@ $fn=64;
 
 module intake_adapter() {
      // Intake ring         
-        translate([0,0,85]) {
-            difference() {
-                cylinder(h=1, d=135); 
-                cylinder(h=5, d=100, center=true );
-                        
-                for(rot=[0:90:360]){
-                    rotate([0,0,rot])
-                        translate([60,0,0]) 
-                        cylinder(d1=4, d2= 4,h=3, center=true);
-                        
-                }
+    translate([0,0,85]) {
+        difference() {
+            cylinder(h=1, d=135); 
+            cylinder(h=5, d=100, center=true );
+                    
+            for(rot=[0:90:360]){
+                rotate([0,0,rot])
+                    translate([60,0,0]) 
+                    cylinder(d1=4, d2= 4,h=3, center=true);
+                    
             }
         }
+        offset = [-10,-10,20];
+        z = [0,0,1];
+        difference() {
+            hull() {
+                
+                translate([0,0,1])
+                cylinder(h=1, d=102);
+                translate(offset)
+                    cube([98,98,1], center=true);
+            }            
+            
+            hull() {
+                translate([0,0,0.99])
+                    cylinder(h=1, d=100);
+                translate(offset+0.1*z)
+                    cube([94,94,1], center=true);
+            }
+        }
+        
+        difference() { 
+            translate(offset+2*z)
+                cube([95.8,95.8,4], center=true); 
+            translate(offset)
+                cube([94,94,10], center=true);        
+        }
+    }
+    
+        
 }
 
 if( $preview )
@@ -160,5 +187,5 @@ if( $preview )
 }
 fan_mount1();
 fan_mount2();
-color("blue")
+color("lightblue")
 intake_adapter();
