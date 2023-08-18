@@ -17,7 +17,6 @@ module fan() {
                 translate([0,0,height-4])
                     cylinder(h=5, d=105 );
             }
-            translate(0,0,-0.2)
             for(rot=[0:12:360]){
                 rotate([0,0,rot])
                 linear_extrude(height, convexity=10) {
@@ -29,7 +28,6 @@ module fan() {
                 }
             }
         }
-        translate(0,0,-0.2)
         for(rot=[0:90:360]){
             rotate([0,0,rot])
             translate([20.2,20.2,-1])
@@ -37,7 +35,7 @@ module fan() {
         }
     }
 }
-
-fan();
+if( $preview )
+    fan();
 
 
