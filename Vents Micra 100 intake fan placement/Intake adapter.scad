@@ -27,53 +27,76 @@ module fan() {
                              [55, -4]]);
                 }
             }
+            translate([0,0,-1])
+            linear_extrude(1)
+            {
+                offset(r=-5)
+                {
+                    circle(d=130+10);                                
+                    for(rot=[0:90:360]){
+                        rotate(rot)
+                        translate([65,0])
+                            circle(d=10+10);
+                    }
+                }
+            }
         }
         for(rot=[0:90:360]){
-            rotate([0,0,rot])
-            translate([20.2,20.2,-1])
-                cylinder(d1=3, d2=2,h=5);
+            rotate([0,0,rot]){
+                translate([20.2,20.2,-1])
+                    cylinder(d1=3, d2=2,h=5);
+                    
+                translate([65,0,-2])
+                    cylinder(d1=4, d2=2,h=5);
+            }
         }
     }
 }
 
 
+module strut_profile(){
+    polygon([[64, 0],
+             [67, -3],
+             [66, 4],
+             [62,8]]);
+}
+
 module fan_mount1() {   
     $fn=64;
-    // Fan connection    
-    difference() {
-        cylinder(d=130, h=2);
-        for(rot=[0:90:360]){
-            rotate([0,0,rot]){
-                translate([20.2,20.2,-1])
-                    cylinder(d=3.5,h=5, $fn=32);
-                //material saver                
-                translate([0,0,-1.5])
-                    cylinder(d=32,h=2, $fn=32);
-                translate([40,0,-1.5])
-                    cylinder(d=45,h=2, $fn=32);
-                
-                translate([36,36,-1.5])
-                    cylinder(d=20,h=2, $fn=32);
-            }
-        }
-    }
+    h=23;
     // Zigzag
     for(rot=[0:90:360]){
         rotate([0,0,rot])
-        linear_extrude(20, twist=20)
-                polygon([[65, 0],
-                         [67, 4],
-                         [63,8]]);
-    }    
-    for(rot=[0:90:360]){
-        rotate([0,0,rot+15])
-        linear_extrude(20, twist=-20)
-                polygon([[65, 0],
-                         [67, 4],
-                         [63,8]]);
+        {
+            linear_extrude(h, twist=20)
+                strut_profile();
+        
+            rotate([0,0,15])
+            linear_extrude(h, twist=-20)
+                strut_profile();
+            
+            linear_extrude(2)
+            {
+                difference(){
+                    hull(){            
+                        strut_profile();
+                        rotate( 15 )            
+                            strut_profile();
+                        rotate( 11 )      
+                            translate([65,0])
+                                circle(d=7);
+                    }                                    
+                    rotate( 11 )      
+                        translate([65,0])
+                            circle(d=3);
+                }
+            }
+        }   
     }
+    
+    
     // Mounting ring
-    translate([0,0,20])
+    translate([0,0,h])
     {    
         difference() {
             cylinder(h=1, d=135 , center=true); 
@@ -92,22 +115,17 @@ module fan_mount1() {
 
 module fan_mount2() {   
 $fn=64;
-    translate([0,0,23]) {
+    h=35;
+    translate([0,0,25]) {
         
         // Zigzag
         for(rot=[45:90:360]){
-            rotate([0,0,rot])
-            linear_extrude(40, twist=30)
-                    polygon([[65, 0],
-                             [67, 4],
-                             [63,8]]);
-        }    
-        for(rot=[45:90:360]){
-            rotate([0,0,rot+15])
-            linear_extrude(40, twist=-30)
-                    polygon([[65, 0],
-                             [67, 4],
-                             [63,8]]);
+            rotate([0,0,rot-5])
+            linear_extrude(h, twist=25)
+                strut_profile();
+            rotate([0,0,rot+20])
+            linear_extrude(h, twist=-25)
+                strut_profile();
         }
         // Mounting ring 
         difference() {
@@ -123,17 +141,26 @@ $fn=64;
             }
         }
         
-        // Intake ring         
-        translate([0,0,41]) {
-            difference() {
-                cylinder(h=2, d=135 , center=true); 
-                cylinder(h=5, d=100, center=true );
-                        
-                for(rot=[0:90:360]){
-                    rotate([0,0,rot+11])
-                        translate([60,0,0]) 
-                        cylinder(d1=6, d2= 4,h=3, center=true);
-                        
+        // Intake ring 
+        
+        for(rot=[0:90:360])
+        rotate([0,0,rot])
+        translate([0,0,h]) {
+            
+            linear_extrude(2)
+            {
+                difference(){
+                    hull(){            
+                        strut_profile();
+                        rotate( 15 )            
+                            strut_profile();
+                        rotate( 11 )      
+                            translate([65,0])
+                                circle(d=7);
+                    }                                    
+                    rotate( 11 )      
+                        translate([65,0])
+                            circle(d=3);
                 }
             }
         }
@@ -143,17 +170,17 @@ $fn=64;
 module intake_adapter() {
     $fn=64;
         
-        offset = [10,10,35];
-    translate([0,0,66]) {
+    offset = [10,10,35];
+    translate([0,0,61.1]) {
      // Intake ring         
         intersection(){
             difference() {
-                cylinder(h=1, d=135);
+                cylinder(h=1, d=140);
                 cylinder(h=5, d=100, center=true );
                         
                 for(rot=[0:90:360]){
                     rotate([0,0,rot])
-                        translate([60,0,0]) 
+                        translate([65,0,0]) 
                         cylinder(d1=4, d2= 4,h=3, center=true);               
                 }
             }
@@ -199,7 +226,7 @@ module intake_adapter() {
 }
 
 if( $preview )
-{    translate([0,0, 2])
+{    
         fan();
 }
 
