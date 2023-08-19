@@ -1,5 +1,5 @@
 
-height=80;
+height=60;
  
 module fan() {
     color("gray")
@@ -36,6 +36,7 @@ module fan() {
     }
 }
 
+
 module fan_mount1() {   
     $fn=64;
     // Fan connection    
@@ -59,20 +60,20 @@ module fan_mount1() {
     // Zigzag
     for(rot=[0:90:360]){
         rotate([0,0,rot])
-        linear_extrude(40, twist=30)
+        linear_extrude(20, twist=20)
                 polygon([[65, 0],
                          [67, 4],
                          [63,8]]);
     }    
     for(rot=[0:90:360]){
         rotate([0,0,rot+15])
-        linear_extrude(40, twist=-30)
+        linear_extrude(20, twist=-20)
                 polygon([[65, 0],
                          [67, 4],
                          [63,8]]);
     }
     // Mounting ring
-    translate([0,0,40])
+    translate([0,0,20])
     {    
         difference() {
             cylinder(h=1, d=135 , center=true); 
@@ -91,7 +92,7 @@ module fan_mount1() {
 
 module fan_mount2() {   
 $fn=64;
-    translate([0,0,43]) {
+    translate([0,0,23]) {
         
         // Zigzag
         for(rot=[45:90:360]){
@@ -142,7 +143,8 @@ $fn=64;
 module intake_adapter() {
     $fn=64;
         
-    translate([0,0,85]) {
+        offset = [10,10,35];
+    translate([0,0,66]) {
      // Intake ring         
         intersection(){
             difference() {
@@ -158,7 +160,6 @@ module intake_adapter() {
             rotate([0,0,45])cube([111,111,120], center=true);
         }
         // Square-circle adapter
-        offset = [0,0,20];
         z = [0,0,1];
         difference() {
             hull() {
@@ -173,7 +174,7 @@ module intake_adapter() {
                 translate([0,0,0.99])
                     cylinder(h=1, d=100);
                 translate(offset+0.1*z)
-                    cube([93,93,6], center=true);
+                    cube([93,93,3], center=true);
             }
         }
         
@@ -183,10 +184,17 @@ module intake_adapter() {
             translate(offset)
                 cube([93,93,10], center=true);        
         }
+        translate([-48,0,2.5]+offset)
+            rotate([0,45,0])
+                cube([3,94,1.5], center=true);
+        
+        translate([47.5,0,2]+offset)
+            rotate([0,-20,0]) cube([1,20,3], center=true);
+        translate([0,47.50,2]+offset)
+            rotate([0,-20,90]) cube([1,20,3], center=true);
+        translate([0,-47.5,2]+offset)
+            rotate([0,-20,-90]) cube([1,20,3], center=true);
     }
-    translate([-48,0,108])
-        rotate([0,45,0])
-            cube([3,94,1.5], center=true);
 
 }
 
