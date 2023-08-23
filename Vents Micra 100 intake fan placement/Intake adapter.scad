@@ -65,7 +65,7 @@ module strut_profile(){
 
 module fan_mount1() {   
     $fn=64;
-    h=23;
+    h=22;
     // Zigzag
     for(rot=[0:90:360]){
         rotate([0,0,rot])
@@ -117,7 +117,7 @@ module fan_mount1() {
 
 module fan_mount2() {   
 $fn=64;
-    h=35;
+    h=32;
     translate([0,0,25]) {
         
         // Zigzag
@@ -239,7 +239,6 @@ if( $preview )
 } else {
    // intake_adapter();
  
-    rotate([180,0])
-        fan_mount1();
-    //fan_mount2();
+   // rotate([180,0]) fan_mount1();
+    fan_mount2();
 }
