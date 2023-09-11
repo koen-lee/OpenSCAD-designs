@@ -54,126 +54,42 @@ module fan() {
     }
 }
 
+module space(){
 
-module strut_profile(){
-    fudge = 5;
-    polygon([[64+fudge, 0],
-             [67+fudge, -3],
-             [66+fudge, 4],
-             [62+fudge,8]]);
-}
-
-module fan_mount1() {   
-    $fn=64;
-    h=22;
-    // Zigzag
-    for(rot=[0:90:360]){
-        rotate([0,0,rot])
-        {
-            linear_extrude(h, twist=18)
-                strut_profile();
-        
-            rotate([0,0,15])
-            linear_extrude(h, twist=-18)
-                strut_profile();
-            
-            linear_extrude(2)
-            {
-                difference(){
-                    hull(){            
-                        strut_profile();
-                        rotate( 15 )            
-                            strut_profile();
-                        rotate( 11 )      
-                            translate([65,0])
-                                circle(d=7);
-                    }                                    
-                    rotate( 11 )      
-                        translate([65,0])
-                            circle(d=3);
-                }
-            }
-        }   
-    }
+    corner = 95.8/2;
+    translate([20+10,0,15])
+        translate([corner,0,0])
+            cube([2,300,159], center=true);
+    
+    translate([0,18+10,15])
+        translate([0,corner,0])
+            cube([300,2,159], center=true);
     
     
-    // Mounting ring
-    translate([0,0,h])
-    {    
-        difference() {
-            cylinder(h=1.5, d=145 , center=true); 
-            cylinder(h=5, d=135, center=true );
-                    
-            for(rot=[0:90:360]){
-                rotate([0,0,rot+56])
-                    translate([70,0,0])
-                    scale([1,4,1])
-                    cylinder(d=2,h=2, center=true);
-                    
-            }
-        }
-    }    
+    translate([-50+10,10,-80+15])
+        translate([-corner,-corner,0])
+            cylinder(h=160, r1=0, r2=1);
+    
+    translate([-90+10,-20+10,-80+15])
+        translate([-corner,corner,0])
+            cylinder(h=160, r1=0, r2=1);
+    
+    translate([-84,-46,10])
+    rotate([0,0,28])
+        cube([2,192,159], center=true);
 }
-
-module fan_mount2() {   
-$fn=64;
-    h=32;
-    translate([0,0,25]) {
-        
-        // Zigzag
-        for(rot=[45:90:360]){
-            rotate([0,0,rot-5])
-            linear_extrude(h, twist=25)
-                strut_profile();
-            rotate([0,0,rot+20])
-            linear_extrude(h, twist=-25)
-                strut_profile();
-        }
-        // Mounting ring 
-        difference() {
-            cylinder(h=1.5, d=145 , center=true); 
-            cylinder(h=5, d=135, center=true );
-                    
-            for(rot=[0:90:360]){
-                rotate([0,0,rot+56])
-                    translate([70,0,0])
-                    scale([1,4,1])
-                    cylinder(d=2,h=2, center=true);
-                    
-            }
-        }
-        
-        // Intake ring 
-        
-        for(rot=[0:90:360])
-        rotate([0,0,rot])
-        translate([0,0,h]) {
-            
-            linear_extrude(2)
-            {
-                difference(){
-                    hull(){            
-                        strut_profile();
-                        rotate( 15 )            
-                            strut_profile();
-                        rotate( 11 )      
-                            translate([65,0])
-                                circle(d=7);
-                    }                                    
-                    rotate( 11 )      
-                        translate([65,0])
-                            circle(d=3);
-                }
-            }
-        }
-    }
+module fan_mount1() 
+{
+    rotate([0,0,-180])
+    linear_extrude(130, convexity=10, center=true)
+        import("spiral.svg");
 }
 
 module intake_adapter() {
     $fn=64;
         
     offset = [10,10,35];
-    translate([0,0,61.1]) {
+    translate([0,0,56]) {
      // Intake ring         
         intersection(){
             difference() {
@@ -224,21 +140,19 @@ module intake_adapter() {
         translate([0,-47.5,2]+offset)
             rotate([0,-20,-90]) cube([1,20,3], center=true);
     }
-
 }
 
 if( $preview )
 {    
     fan();        
     color("lightblue")
-      intake_adapter();
-    rotate([0,0,-11]){
-        fan_mount1();
-        fan_mount2();
-    }
+    intake_adapter();
+    color("orange")
+    space();
+    fan_mount1();
 } else {
-   // intake_adapter();
+    intake_adapter();
  
    // rotate([180,0]) fan_mount1();
-    fan_mount2();
+   // fan_mount2();
 }
