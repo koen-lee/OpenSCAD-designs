@@ -80,36 +80,65 @@ module space(){
 }
 module fan_mount1() 
 {
+    translate([0,0,-45])
     rotate([0,0,-180])
-    linear_extrude(130, convexity=10, center=true)
+    linear_extrude(130, convexity=10)
         import("spiral.svg");
 }
 module fan_mount2(){
-    h=50;
+    h=45;
     rotate([0,0,-180])
     translate([0,0,-h])
     difference(){
         union(){
-        linear_extrude(2, convexity=10)
-            hull() import("spiral.svg");   
-            cylinder(h=50, r1=65, r2=40);
+            linear_extrude(2, convexity=10)
+                hull() import("spiral.svg");   
+            cylinder(h=h, r1=65, r2=40);
         }
         translate([0,0,1])
         linear_extrude(2, convexity=10)
+        
+            offset(r=0.1)
             import("spiral.svg");
                             
         translate([0,0,-2])
-            cylinder(h=50, r1=65-1, r2=40-1);
+            cylinder(h=h, r1=65-0.8, r2=40-0.8);
         
-        
+        // fan mounting holes
         for(rot=[0:90:360]){
             rotate([0,0,rot]){
                 translate([20.2,20.2,h])
                     cylinder(d1=3.5, d2=3.5,h=5, center=true);
             }
         }
+        // Cable hole
+        translate([0,0,h]) rotate([0,0,45])
+            cube(50, center=true);
     } 
 }
+
+module fan_mount3(){
+    h=30;
+    rotate([0,0,-180])
+    translate([0,0,55+h])
+    difference(){
+        union(){
+            linear_extrude(2, convexity=10)
+                hull() import("spiral.svg");   
+            translate([0,0,-h])
+            cylinder(h=h, r1=50, r2=65);
+        }
+        translate([0,0,-1])
+        linear_extrude(2, convexity=10)
+            offset(r=0.1)
+            import("spiral.svg");
+          
+            translate([0,0,-h-0.5])
+            cylinder(h=h+3, r1=50-1.5, r2=65-1.5);     
+        
+    } 
+}
+
 module intake_adapter() {
     $fn=64;
         
@@ -169,16 +198,19 @@ module intake_adapter() {
 
 if( $preview )
 {    
+    
     fan();        
     color("lightblue")
   //  intake_adapter();
-    color("orange")
   //  space();
-  //  fan_mount1();
+    fan_mount1();
     fan_mount2();
+    color("orange")
+    fan_mount3();
 } else {
-    intake_adapter();
+   //intake_adapter();
  
-   // rotate([180,0]) fan_mount1();
-   // fan_mount2();
+    fan_mount1();
+    translate([200,0]) fan_mount2();
+    translate([400,0]) rotate([180,0,0]) fan_mount3();
 }
