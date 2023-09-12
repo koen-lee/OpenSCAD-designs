@@ -91,8 +91,10 @@ module fan_mount2(){
     translate([0,0,-h])
     difference(){
         union(){
-            linear_extrude(2, convexity=10)
+            linear_extrude(1, convexity=10)
                 hull() import("spiral.svg");   
+            linear_extrude(2, convexity=10)
+                offset(1) import("spiral.svg");   
             cylinder(h=h, r1=65, r2=40);
         }
         translate([0,0,1])
@@ -122,19 +124,22 @@ module fan_mount3(){
     rotate([0,0,-180])
     translate([0,0,55+h])
     difference(){
-        union(){
+        union(){            
+            translate([0,0,1])
+                linear_extrude(1, convexity=10)
+                    hull() import("spiral.svg");  
             linear_extrude(2, convexity=10)
-                hull() import("spiral.svg");   
+                offset(1) import("spiral.svg");    
             translate([0,0,-h])
-            cylinder(h=h, r1=50, r2=65);
+            cylinder(h=h+2, r1=50, r2=65);
         }
         translate([0,0,-1])
         linear_extrude(2, convexity=10)
             offset(r=0.1)
-            import("spiral.svg");
+                import("spiral.svg");
           
             translate([0,0,-h-0.5])
-            cylinder(h=h+3, r1=50-1.5, r2=65-1.5);     
+                cylinder(h=h+3, r1=50-1.5, r2=65-1.5);     
         
     } 
 }
@@ -212,5 +217,5 @@ if( $preview )
  
     fan_mount1();
     translate([200,0]) fan_mount2();
-    translate([400,0]) rotate([180,0,0]) fan_mount3();
+    translate([410,0,42]) rotate([180,0,0]) fan_mount3();
 }
