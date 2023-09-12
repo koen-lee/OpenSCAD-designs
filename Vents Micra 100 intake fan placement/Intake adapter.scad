@@ -78,12 +78,16 @@ module space(){
     rotate([0,0,28])
         cube([2,192,159], center=true);
 }
+
+module spiral(){
+    import("spiral.svg");
+}
 module fan_mount1() 
 {
     translate([0,0,-45])
     rotate([0,0,-180])
     linear_extrude(130, convexity=10)
-        import("spiral.svg");
+        spiral();
 }
 module fan_mount2(){
     h=45;
@@ -92,19 +96,23 @@ module fan_mount2(){
     difference(){
         union(){
             linear_extrude(1, convexity=10)
-                hull() import("spiral.svg");   
+                hull() spiral();   
             linear_extrude(2, convexity=10)
-                offset(1) import("spiral.svg");   
-            cylinder(h=h, r1=65, r2=40);
+                intersection(){
+                    offset(1) spiral();
+                    hull() spiral();   
+                }
+                
+            cylinder(h=h, r1=64, r2=40);
         }
         translate([0,0,1])
-        linear_extrude(2, convexity=10)
+        linear_extrude(20, convexity=10)
         
             offset(r=0.1)
             import("spiral.svg");
                             
         translate([0,0,-2])
-            cylinder(h=h, r1=65-0.8, r2=40-0.8);
+            cylinder(h=h, r1=64-0.8, r2=40-0.8);
         
         // fan mounting holes
         for(rot=[0:90:360]){
@@ -127,19 +135,22 @@ module fan_mount3(){
         union(){            
             translate([0,0,1])
                 linear_extrude(1, convexity=10)
-                    hull() import("spiral.svg");  
-            linear_extrude(2, convexity=10)
-                offset(1) import("spiral.svg");    
+                    hull() spiral(); 
+            intersection(){
+                offset(1) spiral();
+                hull() spiral();   
+            }
+            
             translate([0,0,-h])
-            cylinder(h=h+2, r1=50, r2=65);
+            cylinder(h=h+2, r1=50, r2=64);
         }
-        translate([0,0,-1])
-        linear_extrude(2, convexity=10)
+        translate([0,0,-5])
+        linear_extrude(6, convexity=10)
             offset(r=0.1)
                 import("spiral.svg");
           
             translate([0,0,-h-0.5])
-                cylinder(h=h+3, r1=50-1.5, r2=65-1.5);     
+                cylinder(h=h+3, r1=50-1.5, r2=64-1.5);     
         
     } 
 }
@@ -201,14 +212,14 @@ module intake_adapter() {
     }
 }
 
-if( $preview )
+if( /*$preview*/ false )
 {    
     
     fan();        
     color("lightblue")
   //  intake_adapter();
   //  space();
-    fan_mount1();
+  //  fan_mount1();
     fan_mount2();
     color("orange")
     fan_mount3();
@@ -217,5 +228,5 @@ if( $preview )
  
     fan_mount1();
     translate([200,0]) fan_mount2();
-    translate([410,0,42]) rotate([180,0,0]) fan_mount3();
+//    translate([410,0,42]) rotate([180,0,0]) fan_mount3();
 }
