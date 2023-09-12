@@ -28,7 +28,7 @@ module fan() {
                              [55, -4]]);
                 }
             }
-            translate([0,0,-1])
+            /*translate([0,0,-1])
             linear_extrude(1)
             {
                 offset(r=-5)
@@ -40,7 +40,7 @@ module fan() {
                             circle(d=10+10);
                     }
                 }
-            }
+            }*/
         }
         for(rot=[0:90:360]){
             rotate([0,0,rot]){
@@ -84,7 +84,32 @@ module fan_mount1()
     linear_extrude(130, convexity=10, center=true)
         import("spiral.svg");
 }
-
+module fan_mount2(){
+    h=50;
+    rotate([0,0,-180])
+    translate([0,0,-h])
+    difference(){
+        union(){
+        linear_extrude(2, convexity=10)
+            hull() import("spiral.svg");   
+            cylinder(h=50, r1=65, r2=40);
+        }
+        translate([0,0,1])
+        linear_extrude(2, convexity=10)
+            import("spiral.svg");
+                            
+        translate([0,0,-2])
+            cylinder(h=50, r1=65-1, r2=40-1);
+        
+        
+        for(rot=[0:90:360]){
+            rotate([0,0,rot]){
+                translate([20.2,20.2,h])
+                    cylinder(d1=3.5, d2=3.5,h=5, center=true);
+            }
+        }
+    } 
+}
 module intake_adapter() {
     $fn=64;
         
@@ -146,10 +171,11 @@ if( $preview )
 {    
     fan();        
     color("lightblue")
-    intake_adapter();
+  //  intake_adapter();
     color("orange")
-    space();
-    fan_mount1();
+  //  space();
+  //  fan_mount1();
+    fan_mount2();
 } else {
     intake_adapter();
  
