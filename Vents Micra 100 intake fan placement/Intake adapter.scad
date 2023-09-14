@@ -84,11 +84,36 @@ module spiral(){
 }
 module fan_mount1() 
 {
-    translate([0,0,-45])
-    rotate([0,0,-180])
-    linear_extrude(130, convexity=10)
-        spiral();
+    difference() {
+        union() {
+            translate([0,0,-45])
+            rotate([0,0,-180])
+            linear_extrude(130, convexity=10)
+                spiral();
+            intersection(){
+                translate([0,0,-45])
+                rotate([0,0,-180])
+                linear_extrude(130, convexity=10)
+                    hull() spiral();
+                    
+                translate([0,-130,30])
+                {
+                    rotate([0,30,-30])
+                    cube(200);     
+                    rotate([0,60,-30])
+                    cube(200);
+                }
+            }
+        }
+        translate([1.0,-130,30]) {
+            rotate([0,30,-30])
+            cube(200);     
+            rotate([0,60,-30])
+            cube(200);
+        }
+    }
 }
+
 module fan_mount2(){
     h=45;
     rotate([0,0,-180])
@@ -136,10 +161,12 @@ module fan_mount3(){
             translate([0,0,1])
                 linear_extrude(1, convexity=10)
                     hull() spiral(); 
-            intersection(){
-                offset(1) spiral();
-                hull() spiral();   
-            }
+            
+            linear_extrude(2, convexity=10)
+                intersection(){
+                    offset(1) spiral();
+                    hull() spiral();   
+                }
             
             translate([0,0,-h])
             cylinder(h=h+2, r1=50, r2=64);
@@ -212,21 +239,20 @@ module intake_adapter() {
     }
 }
 
-if( /*$preview*/ false )
+if( $preview)
 {    
     
     fan();        
     color("lightblue")
-  //  intake_adapter();
   //  space();
-  //  fan_mount1();
+    fan_mount1();
     fan_mount2();
     color("orange")
     fan_mount3();
 } else {
-   //intake_adapter();
- 
+    rotate([0,0,-15]){
     fan_mount1();
-    translate([200,0]) fan_mount2();
-//    translate([410,0,42]) rotate([180,0,0]) fan_mount3();
+   // translate([200,0]) fan_mount2();
+   // translate([410,0,42]) rotate([180,0,0]) fan_mount3();
+    }
 }
