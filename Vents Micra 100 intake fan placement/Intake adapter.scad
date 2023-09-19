@@ -104,6 +104,10 @@ module fan_mount1()
                     cube(200);
                 }
             }
+            translate([-63.8,-5,30])
+            rotate([90,0,11])
+            scale([2,80,7])
+            cylinder(h=1,d1=1,d2=0, $fn=64);
         }
         translate([1.0,-130,30]) {
             rotate([0,30,-30])
@@ -246,9 +250,9 @@ if( $preview)
     color("lightblue")
   //  space();
     fan_mount1();
-    fan_mount2();
-    color("orange")
-    fan_mount3();
+  //  fan_mount2();
+  //  color("orange")
+  //  fan_mount3();
 } else {
     rotate([0,0,-15]){
     fan_mount1();
