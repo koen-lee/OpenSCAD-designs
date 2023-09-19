@@ -82,17 +82,43 @@ module space(){
 module spiral(){
     import("spiral.svg");
 }
+h2 = 40;
+h3 = 25;
+h1 = 55 + h2 + h3;
 module fan_mount1() 
 {
-    h=120;
+    h=h1;
     difference() {
         union() {
-            translate([0,0,-h/2+20])
-            rotate([0,0,-180])
-            linear_extrude(h, convexity=10)
-                spiral();
+            
+                translate([0,0,-h2])
+                rotate([0,0,-180])
+                 intersection(){
+           {
+                    union() {
+                    linear_extrude(h2, convexity=10)
+                        spiral();
+                    rot = 15;
+                    translate([0,0,h2])
+                        linear_extrude(27, convexity=10, twist=rot)
+                            spiral();
+                    rotate([0,0,-rot])
+                    translate([0,0,h2+27])
+                        linear_extrude(55-27, convexity=10, twist=-rot)
+                            spiral();
+                        
+                    translate([0,0,h2+55])
+                        linear_extrude(h3, convexity=10)
+                            spiral();
+                    }
+                        
+                    linear_extrude(h, convexity=10)
+                        hull() spiral();
+                }
+
+            }
             intersection(){
-                translate([0,0,-45])
+                translate([0,0,-h2])
                 rotate([0,0,-180])
                 linear_extrude(h, convexity=10)
                     hull() spiral();
@@ -105,10 +131,6 @@ module fan_mount1()
                     cube(200);
                 }
             }
-            translate([-63.8,-5,30])
-            rotate([90,0,11])
-            scale([2,80,7])
-            cylinder(h=1,d1=1,d2=0, $fn=64);
         }
         translate([1.0,-h,30]) {
             rotate([0,30,-30])
@@ -120,7 +142,7 @@ module fan_mount1()
 }
 
 module fan_mount2(){
-    h=40;
+    h=h2;
     rotate([0,0,-180])
     translate([0,0,-h])
     difference(){
@@ -158,7 +180,7 @@ module fan_mount2(){
 }
 
 module fan_mount3(){
-    h=25;
+    h=h3;
     rotate([0,0,-180])
     translate([0,0,55+h])
     difference(){
