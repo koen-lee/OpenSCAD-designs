@@ -84,19 +84,20 @@ module spiral(){
 }
 module fan_mount1() 
 {
+    h=120;
     difference() {
         union() {
-            translate([0,0,-45])
+            translate([0,0,-h/2+20])
             rotate([0,0,-180])
-            linear_extrude(130, convexity=10)
+            linear_extrude(h, convexity=10)
                 spiral();
             intersection(){
                 translate([0,0,-45])
                 rotate([0,0,-180])
-                linear_extrude(130, convexity=10)
+                linear_extrude(h, convexity=10)
                     hull() spiral();
                     
-                translate([0,-130,30])
+                translate([0,-h,30])
                 {
                     rotate([0,30,-30])
                     cube(200);     
@@ -109,7 +110,7 @@ module fan_mount1()
             scale([2,80,7])
             cylinder(h=1,d1=1,d2=0, $fn=64);
         }
-        translate([1.0,-130,30]) {
+        translate([1.0,-h,30]) {
             rotate([0,30,-30])
             cube(200);     
             rotate([0,60,-30])
@@ -119,14 +120,14 @@ module fan_mount1()
 }
 
 module fan_mount2(){
-    h=45;
+    h=40;
     rotate([0,0,-180])
     translate([0,0,-h])
     difference(){
         union(){
             linear_extrude(1, convexity=10)
                 hull() spiral();   
-            linear_extrude(2, convexity=10)
+            linear_extrude(3, convexity=10)
                 intersection(){
                     offset(1) spiral();
                     hull() spiral();   
@@ -147,7 +148,7 @@ module fan_mount2(){
         for(rot=[0:90:360]){
             rotate([0,0,rot]){
                 translate([20.2,20.2,h])
-                    cylinder(d1=3.5, d2=3.5,h=5, center=true);
+                    cylinder(d1=4.5, d2=4.5,h=5, center=true);
             }
         }
         // Cable hole
@@ -157,7 +158,7 @@ module fan_mount2(){
 }
 
 module fan_mount3(){
-    h=30;
+    h=25;
     rotate([0,0,-180])
     translate([0,0,55+h])
     difference(){
@@ -166,6 +167,7 @@ module fan_mount3(){
                 linear_extrude(1, convexity=10)
                     hull() spiral(); 
             
+            translate([0,0,-1])
             linear_extrude(2, convexity=10)
                 intersection(){
                     offset(1) spiral();
@@ -250,9 +252,9 @@ if( $preview)
     color("lightblue")
   //  space();
     fan_mount1();
-  //  fan_mount2();
-  //  color("orange")
-  //  fan_mount3();
+    fan_mount2();
+    color("orange")
+    fan_mount3();
 } else {
     rotate([0,0,-15]){
     fan_mount1();
