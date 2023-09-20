@@ -85,38 +85,68 @@ module spiral(){
 h2 = 40;
 h3 = 25;
 h1 = 55 + h2 + h3;
+
+module ramp_2d()
+{
+    offset = [-63.8,-5];
+    hull() {
+    translate( offset) circle(d=2, $fn=16); 
+    rotate(-3)
+       translate( offset) circle(d=2, $fn=16);         
+    }
+    
+    hull() {
+    rotate(-3)
+    translate(offset) circle(d=2, $fn=16); 
+    rotate(-6)
+       translate(offset) circle(d=2, $fn=16);         
+    }
+    hull() {
+    rotate(-6)
+    translate(offset) circle(d=2, $fn=16); 
+    rotate(-10)
+       translate(offset) circle(d=2, $fn=16);         
+    }
+}
+
+module ramp() 
+{
+    intersection() {
+       /* translate([0,0,-h2])
+            rotate([0,0,-180])
+        linear_extrude(h1, convexity=10)
+            hull() spiral();*/
+        tw=10;
+        union(){            
+            translate([0,0,25]) 
+            linear_extrude(25, convexity=3, twist=-tw, slices=20)
+                ramp_2d();  
+            rotate([0,0,tw]){
+            linear_extrude(25, convexity=3, twist=tw, slices=20)
+               ramp_2d();
+            
+            translate([0,0,50]) 
+            linear_extrude(30-2, convexity=3, slices=2)
+               ramp_2d();               
+            
+            translate([0,0,-h2+2]) 
+            linear_extrude(h2-2, convexity=3, slices=2)
+               ramp_2d();               
+            }
+        }
+    }
+}
 module fan_mount1() 
 {
     h=h1;
     difference() {
         union() {
+            translate([0,0,-h2])
+            rotate([0,0,-180])                                    
+                linear_extrude(h, convexity=10)
+                    spiral(); 
+            ramp();
             
-                translate([0,0,-h2])
-                rotate([0,0,-180])
-                 intersection(){
-           {
-                    union() {
-                    linear_extrude(h2, convexity=10)
-                        spiral();
-                    rot = 15;
-                    translate([0,0,h2])
-                        linear_extrude(27, convexity=10, twist=rot)
-                            spiral();
-                    rotate([0,0,-rot])
-                    translate([0,0,h2+27])
-                        linear_extrude(55-27, convexity=10, twist=-rot)
-                            spiral();
-                        
-                    translate([0,0,h2+55])
-                        linear_extrude(h3, convexity=10)
-                            spiral();
-                    }
-                        
-                    linear_extrude(h, convexity=10)
-                        hull() spiral();
-                }
-
-            }
             intersection(){
                 translate([0,0,-h2])
                 rotate([0,0,-180])
@@ -160,7 +190,7 @@ module fan_mount2(){
         translate([0,0,1])
         linear_extrude(20, convexity=10)
         
-            offset(r=0.1)
+            offset(r=0.15)
             import("spiral.svg");
                             
         translate([0,0,-2])
