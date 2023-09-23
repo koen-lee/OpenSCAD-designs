@@ -136,7 +136,7 @@ module ramp()
         }
     }
 }
-module fan_mount1() 
+module sidewall() 
 {
     h=h1;
     difference() {
@@ -171,7 +171,7 @@ module fan_mount1()
     }
 }
 
-module fan_mount2(){
+module fan_mount(){
     h=h2;
     rotate([0,0,-180])
     translate([0,0,-h])
@@ -209,7 +209,7 @@ module fan_mount2(){
     } 
 }
 
-module fan_mount3(){
+module fan_intake(){
     h=h3;
     rotate([0,0,-180])
     translate([0,0,55+h])
@@ -246,14 +246,14 @@ if( $preview)
     fan();        
     color("lightblue")
   //  space();
-    fan_mount1();
-    fan_mount2();
+    sidewall();
+    fan_mount();
     color("orange")
-    fan_mount3();
+    fan_intake();
 } else {
     rotate([0,0,-15]){
-    fan_mount1();
-   // translate([200,0]) fan_mount2();
-   // translate([410,0,42]) rotate([180,0,0]) fan_mount3();
+    sidewall();
+    translate([200,0]) fan_mount();
+    translate([410,0,42]) rotate([180,0,0]) fan_intake();
     }
 }
