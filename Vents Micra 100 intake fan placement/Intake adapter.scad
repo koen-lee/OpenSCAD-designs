@@ -240,63 +240,6 @@ module fan_mount3(){
     } 
 }
 
-module intake_adapter() {
-    $fn=64;
-        
-    offset = [10,10,35];
-    translate([0,0,56]) {
-     // Intake ring         
-        intersection(){
-            difference() {
-                cylinder(h=1, d=140);
-                cylinder(h=5, d=100, center=true );
-                        
-                for(rot=[0:90:360]){
-                    rotate([0,0,rot])
-                        translate([65,0,0]) 
-                        cylinder(d1=4, d2= 4,h=3, center=true);               
-                }
-            }
-            rotate([0,0,45])cube([111,111,120], center=true);
-        }
-        // Square-circle adapter
-        z = [0,0,1];
-        difference() {
-            hull() {
-                
-                translate([0,0,1])
-                cylinder(h=0.1, d=102);
-                translate(offset)
-                    cube([98,98,0.1], center=true);
-            }            
-            
-            hull() {
-                translate([0,0,0.99])
-                    cylinder(h=0.1, d=100);
-                translate(offset+0.01*z)
-                    cube([93,93,0.2], center=true);
-            }
-        }
-        
-        difference() { 
-            translate(offset+2*z)
-                cube([95.8,95.8,4], center=true); 
-            translate(offset)
-                cube([93,93,10], center=true);        
-        }
-        translate([-48,0,2.5]+offset)
-            rotate([0,45,0])
-                cube([3,94,1.5], center=true);
-        
-        translate([47.5,0,2]+offset)
-            rotate([0,-20,0]) cube([1,20,3], center=true);
-        translate([0,47.50,2]+offset)
-            rotate([0,-20,90]) cube([1,20,3], center=true);
-        translate([0,-47.5,2]+offset)
-            rotate([0,-20,-90]) cube([1,20,3], center=true);
-    }
-}
-
 if( $preview)
 {    
     
