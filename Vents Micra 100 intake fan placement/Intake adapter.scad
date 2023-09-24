@@ -1,6 +1,7 @@
 
+build = "fan_mount_plate";//  [fan_mount_plate, fan_mount, sidewall]
 height=52;
- 
+
 module fan() {
     color("gray")
     difference() 
@@ -88,7 +89,7 @@ h1 = 55 + h2 + h3;
 
 module ramp_2d()
 {
-    offset = [-63.8,-5];
+    offset = [-70,-0];
     hull() {
     translate( offset) circle(d=2, $fn=16); 
     rotate(-3)
@@ -99,53 +100,49 @@ module ramp_2d()
     rotate(-3)
     translate(offset) circle(d=2, $fn=16); 
     rotate(-6)
-       translate(offset) circle(d=2, $fn=16);         
+       translate(offset) circle(d=3, $fn=16);         
     }
     hull() {
     rotate(-6)
-    translate(offset) circle(d=2, $fn=16); 
+    translate(offset) circle(d=3, $fn=16); 
     rotate(-10)
-       translate(offset) circle(d=2, $fn=16);         
+       translate(offset) circle(d=4, $fn=16);         
     }
 }
 
 module ramp() 
 {
     intersection() {
-       /* translate([0,0,-h2])
-            rotate([0,0,-180])
-        linear_extrude(h1, convexity=10)
-            hull() spiral();*/
         tw=10;
         union(){            
             translate([0,0,25]) 
             linear_extrude(25, convexity=3, twist=-tw, slices=20)
                 ramp_2d();  
             rotate([0,0,tw]){
-            linear_extrude(25, convexity=3, twist=tw, slices=20)
-               ramp_2d();
-            
-            translate([0,0,50]) 
-            linear_extrude(30-2, convexity=3, slices=2)
-               ramp_2d();               
-            
-            translate([0,0,-h2+2]) 
-            linear_extrude(h2-2, convexity=3, slices=2)
-               ramp_2d();               
-            }
+                linear_extrude(25, convexity=3, twist=tw, slices=20)
+                   ramp_2d();
+                
+                translate([0,0,50]) 
+                linear_extrude(30, convexity=3, slices=2)
+                   ramp_2d();                            
+            }            
+            translate([0,0,-h2+3]) 
+            linear_extrude(h2-3, convexity=3, twist=-tw, slices=2)
+               ramp_2d();     
         }
     }
 }
 module sidewall() 
 {
     h=h1;
+    translate([0,0,1.01])
     difference() {
         union() {
             translate([0,0,-h2])
             rotate([0,0,-180])                                    
                 linear_extrude(h, convexity=10)
                     spiral(); 
-            ramp();
+            //ramp();
             
             intersection(){
                 translate([0,0,-h2])
@@ -161,6 +158,13 @@ module sidewall()
                     cube(200);
                 }
             }
+            
+        hull()
+        {
+            translate([-69,-1,00]) sphere(d=1);            
+            translate([-68,15,20]) sphere(d=1);
+            translate([-80,12,20]) sphere(d=1);
+        }
         }
         translate([1.0,-h,30]) {
             rotate([0,30,-30])
@@ -171,7 +175,7 @@ module sidewall()
     }
 }
 
-module fan_mount(){
+module fan_mount_plate(){
     h=h2;
     rotate([0,0,-180])
     translate([0,0,-h])
@@ -180,19 +184,65 @@ module fan_mount(){
             linear_extrude(1, convexity=10)
                 hull() spiral();   
             linear_extrude(3, convexity=10)
-                intersection(){
+            {    intersection(){
                     offset(1) spiral();
                     hull() spiral();   
                 }
                 
-            cylinder(h=h, r1=64, r2=40);
+                 offset(-5)
+                 offset(5)
+                 {
+                    circle(r=65);                 
+                    for(rot=[15:60:360]){
+                        rotate([0,0,rot]){
+                            translate([68,0])
+                                circle(d=10);
+                        }
+                    }
+                }
+            }
+                
         }
         translate([0,0,1])
         linear_extrude(20, convexity=10)
         
             offset(r=0.15)
             import("spiral.svg");
-                            
+                      
+        translate([0,0,-0.01])      
+         cylinder(h=h, r1=64.2, r2=40);
+        
+        for(rot=[15:60:360]){
+            rotate([0,0,rot]){
+                translate([68,0])
+                    cylinder(d1=3, d2=3,h=8, center=true);
+            }
+        }
+    } 
+}
+
+module fan_mount(){
+    
+    h=h2;
+      translate([0,0,-h])
+     difference(){
+         union() {
+            cylinder(h=h, r1=64, r2=40);
+            translate([0,0,-1])
+             linear_extrude(1)
+             offset(-5)
+             offset(5)
+             {
+                circle(r=65);                 
+                for(rot=[15:60:360]){
+                    rotate([0,0,rot]){
+                        translate([68,0])
+                            circle(d=10);
+                    }
+                }
+            }
+                 
+         } 
         translate([0,0,-2])
             cylinder(h=h, r1=64-0.8, r2=40-0.8);
         
@@ -206,7 +256,14 @@ module fan_mount(){
         // Cable hole
         translate([0,0,h]) rotate([0,0,45])
             cube(50, center=true);
-    } 
+        // plate mounting holes
+        for(rot=[15:60:360]){
+            rotate([0,0,rot]){
+                translate([68,0])
+                    cylinder(d1=3, d2=3,h=5, center=true);
+            }
+        }
+    }
 }
 
 module fan_intake(){
@@ -244,16 +301,22 @@ if( $preview)
 {    
     
     fan();        
-    color("lightblue")
-  //  space();
-    sidewall();
     fan_mount();
+    color("lightgreen")
+    fan_mount_plate();
     color("orange")
-    fan_intake();
-} else {
-    rotate([0,0,-15]){
-    sidewall();
+  {   fan_intake();
+      sidewall();
+  }
+} else {     
+    if( build == "fan_mount_plate")
+        fan_mount_plate();
+    if( build == "fan_mount")
     translate([200,0]) fan_mount();
-    translate([410,0,42]) rotate([180,0,0]) fan_intake();
+    if( build == "sidewall")
+    translate([410,0,42]) rotate([180,0,0])        
+    rotate([0,0,-15]){
+        fan_intake();
+        sidewall();
     }
 }
