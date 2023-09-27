@@ -161,9 +161,9 @@ module sidewall()
             
         hull()
         {
-            translate([-69,-1,00]) sphere(d=1);            
-            translate([-68,15,20]) sphere(d=1);
-            translate([-80,12,20]) sphere(d=1);
+            translate([-69,-1,20]) sphere(d=1);            
+            translate([-68,15,00]) sphere(d=1);
+            translate([-80,12,00]) sphere(d=1);
         }
         }
         translate([1.0,-h,30]) {
@@ -292,7 +292,7 @@ module fan_intake(){
                 import("spiral.svg");
           
             translate([0,0,-h-0.5])
-                cylinder(h=h+3, r1=50-1.5, r2=64-1.5);     
+                cylinder(h=h+3, r1=50-1, r2=64-1);     
         
     } 
 }
