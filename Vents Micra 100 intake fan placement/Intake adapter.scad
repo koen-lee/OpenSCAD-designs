@@ -148,7 +148,11 @@ module sidewall()
                 translate([0,0,-h2])
                 rotate([0,0,-180])
                 linear_extrude(h, convexity=10)
-                    hull() spiral();
+                    hull() 
+                        intersection(){
+                            spiral();
+                            square([300,200], center=true);
+                        }
                     
                 translate([0,-h,30])
                 {
