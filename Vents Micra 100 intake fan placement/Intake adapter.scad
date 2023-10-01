@@ -135,6 +135,7 @@ module ramp()
 module sidewall() 
 {
     h=h1;
+    inset = -130;
     translate([0,0,1.01])
     difference() {
         union() {
@@ -154,7 +155,7 @@ module sidewall()
                             square([300,200], center=true);
                         }
                     
-                translate([0,-h,30])
+                translate([0,inset,30])
                 {
                     rotate([0,30,-30])
                     cube(200);     
@@ -170,7 +171,7 @@ module sidewall()
             translate([-80,12,00]) sphere(d=1);
         }
         }
-        translate([1.0,-h,30]) {
+        translate([1.0,inset,30]) {
             rotate([0,30,-30])
             cube(200);     
             rotate([0,60,-30])
@@ -307,7 +308,7 @@ if( $preview)
     fan();        
     fan_mount();
     color("lightgreen")
-    fan_mount_plate();
+  //  fan_mount_plate();
     color("orange")
   {   fan_intake();
       sidewall();
