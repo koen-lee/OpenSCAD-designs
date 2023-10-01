@@ -84,8 +84,8 @@ module spiral(){
     import("spiral.svg");
 }
 h2 = 40;
-h3 = 25;
-h1 = 55 + h2 + h3;
+h3 = 26;
+h1 = 54 + h2 + h3;
 
 module ramp_2d()
 {
@@ -166,9 +166,9 @@ module sidewall()
             
         hull()
         {
-            translate([-69,-1,20]) sphere(d=1);            
-            translate([-68,15,00]) sphere(d=1);
-            translate([-80,12,00]) sphere(d=1);
+            translate([-69,-1,30]) sphere(d=1);            
+            translate([-68,15,10]) sphere(d=1);
+            translate([-80,12,10]) sphere(d=1);
         }
         }
         translate([1.0,inset,30]) {
@@ -255,7 +255,7 @@ module fan_mount(){
         for(rot=[0:90:360]){
             rotate([0,0,rot]){
                 translate([20.2,20.2,h])
-                    cylinder(d1=4.5, d2=4.5,h=5, center=true);
+                    cylinder(d=4.5,h=5, center=true);
             }
         }
         // Cable hole
@@ -265,7 +265,7 @@ module fan_mount(){
         for(rot=[15:60:360]){
             rotate([0,0,rot]){
                 translate([68,0])
-                    cylinder(d1=3, d2=3,h=5, center=true);
+                    cylinder(d=3,h=5, center=true);
             }
         }
     }
@@ -274,7 +274,7 @@ module fan_mount(){
 module fan_intake(){
     h=h3;
     rotate([0,0,-180])
-    translate([0,0,55+h])
+    translate([0,0,54+h])
     difference(){
         union(){            
             translate([0,0,1])
@@ -308,7 +308,7 @@ if( $preview)
     fan();        
     fan_mount();
     color("lightgreen")
-  //  fan_mount_plate();
+    fan_mount_plate();
     color("orange")
   {   fan_intake();
       sidewall();
