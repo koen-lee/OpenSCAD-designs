@@ -44,12 +44,12 @@ module fan() {
             {
                 cylinder(d = size - 14, h=30);
                 union(){
-                     for(rot=[0:72:360])
+                     for(rot=[0:360/7:360])
                         rotate(z*rot)                        
                             translate([0,0,15])
                             rotate([70,0,0])
                                 translate([0,0,-20])
-                                cube([size, 2, 40]);
+                                cube([size, 2, 30]);
                 }
             }
             translate(z*5)        
@@ -91,10 +91,10 @@ difference() {
         translate([heat_exchanger_x/2,0])
             cube([heat_exchanger_x+8, heat_exchanger_y+8,0.4], center=true);
         //strengthening ribs
-        position_fan() translate(z*-25) cube([2,126,49.5],center=true);
+        position_fan() translate(z*-25) cube([0.8,126,49.5],center=true);
         hull(){
-            translate([heat_exchanger_x,0,0]) cube([2,2,0.4], center=true);
-            translate([122,0,70]) cube([5,2,1], center=true);
+            translate([heat_exchanger_x,0,0]) cube([2,0.8,0.4], center=true);
+            translate([122,0,70]) cube([5,0.8,1], center=true);
         }
     }
     hull() {
