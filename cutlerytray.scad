@@ -13,10 +13,13 @@ module pickup() {
                 translate([10/2,length/2-8,0])
                     cube([10-width,10+width+1,width+1],center=true);
             }
-             
-            translate([10-1,length/2-6,0])
+             hull(){
+            translate([10-3,length/2-11,0])
                 cylinder(d=width-1, h=width,$fn=32,center=true); 
-            
+            translate([10,length/2,0])
+                cylinder(d=width, h=width,$fn=32,center=true); 
+             }
+             
             translate([0,-length/2,0.5])
                 cube([width+2,1,width+1],center=true);
             
@@ -24,7 +27,7 @@ module pickup() {
                 scale([1,0.7,1])
                 cylinder(d=width+1, h=width,$fn=32,center=true);
         }
-        
+
         translate([0,-length/2+4,0])
                 scale([0.3,2,1.1])
                 cylinder(d=width, h=width+1,$fn=32,center=true);
@@ -59,6 +62,8 @@ module mesh() {
     }
 }
 
-//translate([-10,0,2])
+translate([-10,0,2])
 pickup();
-//mesh();
+
+translate([35,-20,0]) rotate([0,0,90])
+mesh();
