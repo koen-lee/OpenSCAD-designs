@@ -70,20 +70,23 @@ module position_fan() {
     }
 }
 
-//position_fan() fan();
+position_fan() fan();
 
 difference() {
     union() {
+        hull()
         position_fan()       
-            hull(){
+            for(rot=[0:90:360])
+                rotate(z*rot)
+                    translate([size/2-2,size/2-2,-2.1])
+                        cylinder($fn=8, h=3, r=3);
+        hull(){
+            position_fan()       
                 for(rot=[0:90:360])
                     rotate(z*rot)
                         translate([size/2-2,size/2-2,-2.1])
-                            cylinder($fn=8, h=2, r=2);
-                    
-            } 
-        hull() {
-            position_fan() translate(-z)cylinder(h=1, d=120-1);
+                            cylinder($fn=8, h=0.1, r=3);
+                   
             translate([heat_exchanger_x/2,0])
                 cube([heat_exchanger_x, heat_exchanger_y,0.4], center=true);
         }
@@ -91,25 +94,40 @@ difference() {
         translate([heat_exchanger_x/2,0])
             cube([heat_exchanger_x+8, heat_exchanger_y+8,0.4], center=true);
         //strengthening ribs
-        position_fan() translate(z*-25) cube([0.8,126,49.5],center=true);
+        translate([85,0,27]) cube([0.8,126,54],center=true);
         hull(){
-            translate([heat_exchanger_x,0,0]) cube([2,0.8,0.4], center=true);
-            translate([122,0,70]) cube([5,0.8,1], center=true);
+            translate([heat_exchanger_x,30,0]) cube([2,0.9,0.4], center=true);
+            translate([122,-30,70]) cube([5,0.9,1], center=true);
         }
     }
     hull() {
-        position_fan()translate(-z) cylinder(h=0.1, d=120-2);
+        position_fan() translate(-z*1.5)
+            intersection() { 
+                cylinder(h=0.1, d=130);
+                cube(120, center=true);
+            }
         translate([heat_exchanger_x/2,0])
             cube([heat_exchanger_x-2, heat_exchanger_y-2,1.1], center=true);
     }
-    position_fan()translate(-z) cylinder(h=3, d=120-2, center=true);
-    
+    hull(){
+        position_fan()       
+            for(rot=[0:90:360])
+                rotate(z*rot)
+                    translate([size/2-2,size/2-2])
+                        cylinder($fn=8, h=3, r=2);
+    }
+    position_fan()translate(-z)
+        intersection() { 
+            cylinder(h=3, d=130, center=true);
+            cube(120, center=true);
+        }
+
     position_fan()  
     for(rot=[0:90:360])
         rotate(z*rot)
         {
             // Mounting hole
-            translate([105/2,105/2,-4])             
+            translate([105/2,105/2,-10])             
                 cylinder(h=30, d=5,$fn=16);
         }
 }
