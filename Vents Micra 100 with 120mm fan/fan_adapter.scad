@@ -25,8 +25,8 @@ module fan() {
                     rotate(z*rot)
                     {
                         // Mounting hole
-                        translate([size/2-4,size/2-4])             
-                            cylinder($fn=8, h=30, r=2);
+                        translate([105/2,105/2])             
+                            cylinder($fn=8, h=30, d=5);
                         
                         translate([size/2,size/2,3.5])
                             cylinder($fn=4, h=20, r=30);
@@ -70,7 +70,7 @@ module position_fan() {
     }
 }
 
-position_fan() fan();
+//position_fan() fan();
 
 difference() {
     union() {
@@ -109,7 +109,7 @@ difference() {
         rotate(z*rot)
         {
             // Mounting hole
-            translate([size/2-4,size/2-4])             
-                cylinder($fn=8, h=10, r=2, center=true);
+            translate([105/2,105/2,-4])             
+                cylinder(h=30, d=5,$fn=16);
         }
 }
