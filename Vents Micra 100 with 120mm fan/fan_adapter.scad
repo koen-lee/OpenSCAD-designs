@@ -43,13 +43,16 @@ module fan() {
             intersection()
             {
                 cylinder(d = size - 14, h=30);
+                translate(5*z)
                 union(){
                      for(rot=[0:360/7:360])
-                        rotate(z*rot)                        
-                            translate([0,0,15])
-                            rotate([70,0,0])
-                                translate([0,0,-20])
-                                cube([size, 2, 30]);
+                        rotate(z*rot)    // Fan blades
+                             linear_extrude(15,twist=40, slices=5, convexity=10)
+                                difference()
+                                    { translate([30,-10]) circle(d=65);
+                                      translate([30,-13]) circle(d=67);
+                                    }
+                    
                 }
             }
             translate(z*5)        
@@ -101,7 +104,7 @@ difference() {
         }
     }
     hull() {
-        position_fan() translate(-z*1.5)
+        position_fan() translate(-z*2)
             intersection() { 
                 cylinder(h=0.1, d=130);
                 cube(120, center=true);
