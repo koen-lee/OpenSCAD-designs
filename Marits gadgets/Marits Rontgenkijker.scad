@@ -61,8 +61,11 @@ module lens() {
 }
 
 difference() {
-    translate([0,45])
-        unit();
+    union() {
+        translate([0,45])
+            unit();
+        band();
+    }
     translate([0,43,10])
     rotate([-45,0,0])
         cube([25, 25, 0.5], center=true);
@@ -72,7 +75,6 @@ translate([11,53,13]) rotate([0,0,180])
 translate([-1,53,13]) rotate([0,0,180])
     button("off", 8);
 
-band();
 translate([0,56,8])
 rotate([-90,0,0])
 lens();
