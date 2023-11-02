@@ -3,7 +3,7 @@ module names() {
     linear_extrude(2)
     {
         h=24;
-        off = 4
+        off = 10
         ;
         indent = 0;
         translate([indent,3*h+off])
@@ -13,7 +13,7 @@ module names() {
         translate([indent,1*h+off])
         text("Marit", size=20, font="Wilgenrijk");
         translate([0,0])
-        text("van Leeuwen", size=24, font="Wilgenrijk");
+        text("van Leeuwen", size=27, font="Wilgenrijk");
     }
     color("grey")
     linear_extrude(1)
@@ -51,7 +51,8 @@ module number() {
         }
 
 }
-
-translate([100.2,40.2])
-number();
-names();
+translate([10,10]){
+    translate([100.2,40.2])
+        number();
+    names();
+}
