@@ -1,3 +1,4 @@
+
 module wire_tray()
 {
     radius=450;
@@ -7,9 +8,9 @@ module wire_tray()
     {
         translate([radius, 0])
         {
-            $fn=32;
+            $fn=64;
             //lower wire
-            circle(d=6.06);
+            circle(d=6.09);
             polygon([
                     [-5,-7],
                     [5,-7], 
@@ -19,7 +20,7 @@ module wire_tray()
                     [-3.03,-3]               
                 ]);
             //upper wire
-            translate([6,37.6])
+            translate([6.04,37.6])
                 circle(d=8.08);
         }
     }
@@ -46,7 +47,9 @@ module outline()
                     [38,-5],
                     [38,30],
                     [38,60],
-                    [16,60],
+                    [14,60],
+                    [14,39],
+                    [8,38],
                     [-7,10]
                 ]);
 }
@@ -54,7 +57,7 @@ module outline()
 module blob() {
     radius=450;
     translate([-radius,0,0])
-    hull(){
+    union(){
         rotate([0,0,-2])
         rotate_extrude(angle=5, $fa=1)
         {
@@ -67,29 +70,12 @@ module blob() {
                 }
             }
         }
-        rotate([0,0,-2.25])
-        rotate_extrude(angle=5.5, $fa=1)
-        {
-            translate([radius, 0])
-            { 
-                offset(r=-2)
-                outline();
-            }
-        }
-        rotate([0,0,-2.15])
-        rotate_extrude(angle=5.3, $fa=1)
-        {
-            translate([radius, 0])
-            { 
-                offset(r=-0.7)
-                outline();
-            }
-        }
     }        
 }
 
 module lid()
 {
+    $fn=64;
     lid_diameter=250;
     cylinder(h=17,d=lid_diameter);
     translate([0,0,15])
@@ -101,7 +87,7 @@ module lid()
 difference(){
     blob();
     wire_tray();
-    mounting(2);
+  //  mounting(2);
   //  mounting(0);
     mounting(-1.2);
     
@@ -112,5 +98,19 @@ difference(){
     translate([35,-20,-5])
         rotate([45,0,0])
             cube([50,50,50],center=true);
+    
+    translate([35,-20,90])
+        rotate([45,0,0])
+            cube([50,50,50],center=true);
+    translate([35,29,90])
+        rotate([45,0,0])
+            cube([50,50,50],center=true);
+    translate([0,46,50])
+        rotate([45,0,0])
+            cube([50,50,50],center=true);
+    translate([5,40,65])
+        rotate([45,0,-45])
+            cube([50,50,50],center=true);
+    
     
 }
