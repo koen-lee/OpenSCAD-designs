@@ -1,4 +1,4 @@
-$fn = 32;
+$fn=32*($preview?1:2);
 module slotbout_m8()
 {
     color("gray")
@@ -8,10 +8,9 @@ module slotbout_m8()
         {
             translate([0,0,20])
                 sphere(d=40);
-            cylinder(d=20, h=5);
+            cylinder(d=20.5, h=5);
             
             cylinder(d1=29, d2=19, h=5);
-            cylinder(d1=17.5, d2=22, h=6);
         }
         translate([0,0,6])
             cube([8,8,8], center=true);
@@ -24,20 +23,24 @@ difference(){
     intersection()
     {
         translate([0,0,20])
-            sphere(d=42);
-        cylinder(d=22, h=12, center=true);
+            sphere(d=43);
+        cylinder(d=24, h=12, center=true);
     }
     
     slotbout_m8();
     translate([0,0,3.2])
         cylinder(d1=15,d2=25, h=5);
-    for(i=[0:(360/7):360])
+    $n=7;
+    for(i=[0:(360/$n):360])
     {
         rotate([0,0,i])
-        translate([-0.5, 0,3])
-            cube([1,30,10]);
+        translate([0, -0.5,3])
+            cube([30,1,10]);
     }
+    translate([0,0,4])
+        cylinder(h=4,d=20.5,$fn=7);
+    
     if($preview)
-        cube(20);
+        translate([0,0,-5])cube(20);
     
 }

@@ -1,5 +1,5 @@
 module names() {
-    color("black")
+    color("grey")
     linear_extrude(2)
     {
         h=24;
@@ -15,7 +15,7 @@ module names() {
         translate([0,0])
         text("van Leeuwen", size=27, font="Wilgenrijk");
     }
-    color("grey")
+    color("white")
     linear_extrude(1)
         offset(-10)
         offset(20)
@@ -33,20 +33,20 @@ module number() {
 
     color("darkgrey")
     linear_extrude(2)
-        translate([40,15])
-        text("17", size=80, font="Wilgenrijk", halign="center");
+        translate([130/2,15])
+        text("17", size=100, font="Wilgenrijk", halign="center");
     color("teal")
         linear_extrude(1)
         difference() {
             offset(10)
-                square(80);
+                square([150-20,120-20]);
                 
             circle(r=2);
-            translate([80,0])
+            translate([130,0])
             circle(r=2);
-            translate([0,80])
+            translate([0,100])
             circle(r=2);
-            translate([80,80])
+            translate([130,100])
             circle(r=2);
         }
 
