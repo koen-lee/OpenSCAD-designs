@@ -79,8 +79,8 @@ module door_mount(){
 difference(){
     union(){
         door_mount();
-        translate([0,0,30])
-            door_mount();
+       /* translate([0,0,30])
+            door_mount();*/
     }
     translate([-3,-10,5])
         cube([5,100,30]);
@@ -137,4 +137,40 @@ translate([8,50,14])
         
     }
 }
-    
+
+color("red")
+translate([8,50,10.2])
+{
+    difference(){
+        union() {
+            cylinder(r=10, h=3.8);
+            translate([-1.5,5,0])
+                cube([2.8,5,9]);
+            
+            translate([-1.5,-9,0])
+                cube([2.8,4,9]);
+            difference() {
+                intersection()
+                {
+                    cylinder(r=10, h=9);
+                    translate([-1,-50,0])
+                        cube([100,100,100]);
+                }
+                cylinder(r=9, h=10);
+            }
+            // handle
+            translate([9,-1.5,0])
+            rotate([0,0,10])
+            hull(){
+                cube([40,3,9]);
+                translate([0,-2,5])
+                cube([35,10,4]);
+            }
+        }
+        
+        translate([0,0,-1])
+            cylinder(d=3, h=100);
+        translate([0,0,3.8])
+            cube([15.5,3.2,12]);
+    }
+}
