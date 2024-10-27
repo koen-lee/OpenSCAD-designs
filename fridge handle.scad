@@ -189,7 +189,8 @@ translate([8,50,10.2])
 }
 } else // print layout
 {
-        gear_part();
-    handle(); 
-    door_pusher();
+    //gear_part();
+    //handle(); 
+    //door_pusher();
+    door_clip();
 }
