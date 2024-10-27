@@ -18,7 +18,7 @@ module mygear( n, bore )
     translate([3-5,50-pitch/4,13])
     {
        linear_extrude(14) 
-       polygon([[-2.5,3*pitch-dy],
+       polygon([[-2.5,3.5*pitch-dy],
                 [-2.5,-dy],
                 [-dx,0.0*pitch - dy],
                 [ dx,0.0*pitch + dy],
@@ -32,7 +32,10 @@ module mygear( n, bore )
                 [ dx,2.0*pitch + dy],
                 [ dx,2.5*pitch - dy],
                 [-dx,2.5*pitch + dy],
-                [-dx,3.0*pitch - dy]
+                [-dx,3.0*pitch - dy],
+                [ dx,3.0*pitch + dy],
+                [ dx,3.5*pitch - dy],
+                [-dx,3.5*pitch + dy]
                 ]);
                 
     }
@@ -80,7 +83,9 @@ difference(){
             door_mount();
     }
     translate([-3,-10,5])
-        cube([100,100,30]);
+        cube([5,100,30]);
+    translate([-3,-10,5])
+        cube([100,20,30]);
 }
 
 color("blue"){
@@ -99,16 +104,37 @@ color("blue"){
             }
         }
         translate([-4,40,13])
-             cube([100,20,14]);
+             cube([100,25,14]);
     }
+    
+    rack();
 }
 
 
 
 color("green")
 translate([8,50,14])
-    mygear(18,3);    /*pitch radius 10*/
-    
-color("red") {
-    rack();
+{
+    difference() {
+        union() {
+            intersection(){
+                rotate([0,0,360/18/2])
+                mygear(18,3);    /*pitch radius 10*/
+                translate([-100,0,-50])
+                cube([100,100,100]);
+            }
+            cylinder(r=8, h=12);
+            cube([15,3,12]);
+        }
+        translate([0,0,-1])
+            cylinder(d=3, h=100);
+        
+        translate([-1.5,5,-1])
+            cube([3,15,14]);
+        
+        translate([-1.5,-20,-1])
+            cube([3,15,14]);
+        
+    }
 }
+    
