@@ -75,20 +75,8 @@ module door_mount(){
     }
 }
 
-
-difference(){
-    union(){
-        door_mount();
-       /* translate([0,0,30])
-            door_mount();*/
-    }
-    translate([-3,-10,5])
-        cube([5,100,30]);
-    translate([-3,-10,5])
-        cube([100,20,30]);
-}
-
-color("blue"){
+module door_pusher() {
+    
     difference() {
         union() {
             translate([-3,-9,5])
@@ -103,18 +91,14 @@ color("blue"){
                      cube([2.5,65,14]);
             }
         }
-        translate([-4,40,13])
+        translate([-4,49.9,13])
              cube([100,25,14]);
     }
-    
     rack();
 }
 
-
-
-color("green")
-translate([8,50,14])
-{
+module gear_part(){
+    
     difference() {
         union() {
             intersection(){
@@ -138,9 +122,8 @@ translate([8,50,14])
     }
 }
 
-color("red")
-translate([8,50,10.2])
-{
+module handle() {
+    
     difference(){
         union() {
             cylinder(r=10, h=3.8);
@@ -173,4 +156,40 @@ translate([8,50,10.2])
         translate([0,0,3.8])
             cube([15.5,3.2,12]);
     }
+}
+
+module door_clip(){
+        
+    difference(){ 
+            door_mount();
+        translate([-3,-10,5])
+            cube([5,100,30]);
+        translate([-3,-10,5])
+            cube([100,20,30]);
+    }
+}
+
+if($preview) {
+
+door_clip();
+color("blue"){
+    door_pusher();
+}
+
+color("green")
+translate([8,50,14])
+{
+    gear_part();
+}
+
+color("red")
+translate([8,50,10.2])
+{
+    handle();
+}
+} else // print layout
+{
+        gear_part();
+    handle(); 
+    door_pusher();
 }
