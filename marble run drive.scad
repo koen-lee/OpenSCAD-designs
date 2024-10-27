@@ -18,7 +18,7 @@ module drive_pulley() {
             translate([6,0,3.9])
                 cylinder(h=3, d=2, $fn=8);
         }
-        cylinder(h=10, d=3, center=true, $fn=16);
+        cylinder(h=10, d=3.5, center=true, $fn=16);
     }
 }
 
