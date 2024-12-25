@@ -1,3 +1,4 @@
+$fn=64;
 module names() {
     color("grey")
     linear_extrude(2)
@@ -50,9 +51,35 @@ module number() {
             circle(r=2);
         }
 
+} 
+
+module shape(offset, h) {
+
+        linear_extrude(h, convexity=10)
+    offset(-10+offset)
+            offset(20)
+            {
+                difference()
+                {
+                    square([180,100]);
+                    translate([80,20])
+                        square( [180,100]);
+                }
+            }
+        
 }
-translate([10,10]){
-    translate([100.2,40.2])
-        number();
-    names();
-}
+   /* translate([100.2,40.2])
+        number();*/
+//    names();
+
+    color("darkgrey")
+    difference() {
+            union(){
+                translate([0,0,0.001])
+                shape(2,h=5); 
+                translate([0,0,0.2])                
+                shape(2.2,h=4); 
+            }
+            shape(-2, h=10);         
+            shape(0.2, h=4.5);
+    }
