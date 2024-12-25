@@ -46,7 +46,8 @@ module door_profile(){
      polygon([[0, 0],
               [0,40],
               [6,40],
-              [4, 0]]);      
+              [6.5,30],
+              [4.2, 0]]);      
     }
 module door_mount(){
     linear_extrude(10, convexity=10)
@@ -65,12 +66,19 @@ module door_mount(){
             door_profile();
             // door glass
             polygon( [[4, 2],
-                      [4,38],
-                      [100,38],
+                      [4,38.5],
+                      [100,38.5],
                       [100, 2]]);
             // pivot
             translate([8,50])
                 circle(r=1.5);
+            //click
+            hull(){
+                translate([2,42])
+                    circle(r=0.51);
+                translate([20,45])
+                    circle(r=1.5);
+            }
         }
     }
 }
@@ -98,7 +106,6 @@ module door_pusher() {
 }
 
 module gear_part(){
-    
     difference() {
         union() {
             intersection(){
@@ -126,7 +133,7 @@ module handle() {
     
     difference(){
         union() {
-            cylinder(r=10, h=3.8);
+            cylinder(r=7, h=3.8);
             translate([-1.5,5,0])
                 cube([2.8,5,9]);
             
@@ -139,6 +146,7 @@ module handle() {
                     translate([-1,-50,0])
                         cube([100,100,100]);
                 }
+                translate([0,0,3])
                 cylinder(r=9, h=10);
             }
             // handle
@@ -166,27 +174,30 @@ module door_clip(){
             cube([5,100,30]);
         translate([-3,-10,5])
             cube([100,20,30]);
+        
+        
+        translate([9,43,-0.1])
+            cylinder(d1=3.5, d2=2.9, h=11);
     }
 }
 
 if($preview) {
+    door_clip();
+    color("blue"){
+        door_pusher();
+    }
 
-door_clip();
-color("blue"){
-    door_pusher();
-}
+    color("green")
+    translate([8,50,14])
+    {
+        gear_part();
+    }
 
-color("green")
-translate([8,50,14])
-{
-    gear_part();
-}
-
-color("red")
-translate([8,50,10.2])
-{
-    handle();
-}
+    color("red")
+    translate([8,50,10.2])
+    {
+        handle();
+    }
 } else // print layout
 {
     //gear_part();
