@@ -4,12 +4,19 @@ module mount() {
         union() {
             hull() {
                 cylinder(d=11, h=9.5, center=true);
-                translate([0,5,0])
-                    cube([11,2,9.5],center=true);
+                translate([0.75,10,0])
+                    cube([12.5,2,9.5],center=true);
             }
-            translate([-11/2,5,-2.2])
+            
+            hull() {
+                 translate([0.75,11,0])
+                    cube([12,0.01,12],center=true);
+                 translate([0.75,10,0])
+                    cube([12.5,2,9.5],center=true);
+            }
+            translate([-11/2,10,-2.2])
                     cube([4.4,8,4.4]);
-            translate([-11/2+4.4+2,5,-2.2])
+            translate([-11/2+4.4+2,10,-2.2])
                     cube([4.4,8,4.4]);
             
         }
@@ -42,7 +49,7 @@ module mount2(){
     }
 }
 
-translate([0,0,-8])
+translate([0,0,-8-5])
 rotate([90,0,0])
     mount();
 
