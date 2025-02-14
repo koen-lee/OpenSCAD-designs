@@ -2,15 +2,15 @@ $fn=16;
 module klem_omtrek()
 {
     
-    offset(r=2)
-    offset(r=-4)
-    offset(r=2)
+    offset(r=4)
+    offset(r=-8)
+    offset(r=4)
     union() {
         translate([0,-30])
-            square([30,60], center=true);
+            square([25,40], center=true);
           
         hull() {
-            square([30,30], center=true);
+            square([25,30], center=true);
             translate([0,7.5])
                 square([60,15], center=true);
         }  
@@ -18,8 +18,8 @@ module klem_omtrek()
 }
 
 module veer_houder() {
-    offset(r=-13,$fn=32)
-    offset(r=13,$fn=32)
+    offset(r=-18,$fn=32)
+    offset(r=18,$fn=32)
     {
         square([1,50], center=true);
         translate([4,0])
@@ -32,9 +32,9 @@ module veer_houder() {
 module zak_klem1()
 {
     union(){
-        translate([9,0])
+        translate([8,0])
             3d_veer_houder();
-        translate([-9,0])
+        translate([-8,0])
             3d_veer_houder();
         minkowski() {
             sphere(r=0.5, $fn=5);
@@ -47,11 +47,16 @@ module zak_klem1()
         
         hull()
         {
-            translate([-28,34.5,0.7])
+            translate([-26,34.5,0.7])
                 sphere(d=2, $fn=16);
-            translate([28,34.5,0.7])
+            translate([26,34.5,0.7])
                 sphere(d=2, $fn=16);
-        }
+        } 
+            translate([-5,-11,0.9])
+                sphere(d=2, $fn=16);
+            translate([5,-11,0.9])
+                sphere(d=2, $fn=16);
+        
     }
         
 }
@@ -59,9 +64,9 @@ module zak_klem2()
 {
     union(){
         
-        translate([6.5,0])
+        translate([5.5,0])
             3d_veer_houder();
-        translate([-6.5,0])
+        translate([-5.5,0])
             3d_veer_houder();
         minkowski() {
             sphere(r=0.5, $fn=5);
@@ -98,20 +103,20 @@ module 3d_veer_houder() {
 
 if($preview)
 {
-rotate([0,90,0])
-color("blue")
-    cylinder(h=20, d=3, center=true);
+    rotate([0,90,0])
+    color("blue")
+        cylinder(h=20, d=3, center=true);
 
-r = 11.5;
-rotate([r])
-translate([0,0,-8.5])
-zak_klem1();
-rotate([r,180,0])
-translate([0,0,-8.5])
-zak_klem2();
+    r = 11.5;
+    rotate([r])
+    translate([0,0,-8.5])
+    zak_klem1();
+    rotate([r,180,0])
+    translate([0,0,-8.5])
+    zak_klem2();
 } else {    
     zak_klem1();        
-    translate([50,-5,0])
+    translate([44,24,0])
     rotate([0,0,180])
         zak_klem2();
 }
