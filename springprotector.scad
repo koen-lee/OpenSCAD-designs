@@ -1,0 +1,9 @@
+$fn=128;
+d=14.1;
+difference(){
+    union(){
+        cylinder(h=0.4,d=d+0.8);
+        cylinder(h=20,d=d+0.4);
+    }
+    cylinder(h=120,d=d,center=true);
+}
