@@ -3,7 +3,7 @@ difference(){
     union(){
         rotate([90]) translate([-25,-2])
         linear_extrude(30, center=true){
-            polygon([[0,-extraheight],[50,-extraheight],[50,17], [0,7.5]]);
+            polygon([[3,-extraheight],[50,-extraheight],[50,17.3], [0,4.3]]);
         }
     }
     translate([0,0,15])
@@ -14,6 +14,6 @@ difference(){
 }
 
         hull(){
-            cylinder(h=7.5, d=10.1, $fn=8);
-            cylinder(h=8, d=9, $fn=8);
+            cylinder(h=7, d=10.1, $fn=8);
+            cylinder(h=7.5, d=9, $fn=8);
         }

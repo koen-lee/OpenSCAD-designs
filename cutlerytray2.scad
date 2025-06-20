@@ -1,7 +1,7 @@
 module mesh() {
 
     difference() {
-        thickness = 1;
+        thickness = 0.5;
         size_x=55;
         size_y=40;
         cube([55,40,20]);
