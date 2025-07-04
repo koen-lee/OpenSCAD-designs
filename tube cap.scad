@@ -1,0 +1,19 @@
+difference(){
+    union(){
+        cylinder(d=20,h=1.5);
+        hull(){
+            cylinder(d1=17,d2=18.2,h=10);
+            cylinder(d=17,h=20);
+        }
+    }
+    translate([0,0,1])
+        hull(){
+            cylinder(d1=16,d2=17,h=10);
+            cylinder(d=16,h=20);
+        }
+    translate([0,0,10])
+    {
+        cube([20,2,15],center=true);
+        cube([2,20,15],center=true);
+    }
+}
