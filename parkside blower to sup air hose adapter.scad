@@ -7,7 +7,7 @@ sup_end();
 
 module sup_end() {
     difference(){
-        linear_extrude(8, twist=360, convexity=10)
+        linear_extrude(8, twist=-360, convexity=10)
         {
             difference(){
                 union(){
@@ -21,6 +21,7 @@ module sup_end() {
                 circle(d=22);
             }
         }
+        rotate([0,0,90])
         translate([0,0,-0.01])
         difference(){
             union(){
@@ -31,7 +32,7 @@ module sup_end() {
             cylinder(d=26, h=10);
         }
         translate([0,0,8-0.99])
-        rotate([0,0,90])
+        rotate([0,0,0])
         difference(){
             union(){
                 cube([100,100,1]);
@@ -41,7 +42,7 @@ module sup_end() {
             cylinder(d=26, h=10);
         }
         translate([0,0,-0.01])
-        cylinder(h=8,d1=24,d2=22);
+        cylinder(h=8,d1=25,d2=22);
     }
 }
 
@@ -55,28 +56,38 @@ module parkside_end(){
             translate([0,0,10])
             cylinder(h=4, d1=31, d2=26);
         }
-        cylinder(h=250, d=24, center=true);
+        cylinder(h=250, d=25, center=true);
         hull()
         {
-            translate([0,0,6])
+            translate([0,0,6.2])
             {
                 rotate([90,0,0])
                     cylinder(h=lock_diameter/2, d=4 );
-                rotate([90,0,20])
+                rotate([90,0,15])
+                    cylinder(h=lock_diameter/2, d=4);
+                rotate([90,0,30])
                     cylinder(h=lock_diameter/2, d=4);
             }
-        }
+        }        
+        translate([0,0,6])
+            rotate([90,0,30])
+                cylinder(h=lock_diameter/2, d=4);
         hull()
         {
             rotate([0,0,180])
-            translate([0,0,6])
+            translate([0,0,6.2])
             {
                 rotate([90,0,0])
                     cylinder(h=lock_diameter/2, d=4 );
-                rotate([90,0,20])
+                rotate([90,0,15])
                     cylinder(h=lock_diameter/2, d=4 );
-            }
+                rotate([90,0,30])
+                    cylinder(h=lock_diameter/2, d=4 );
+            }            
         }
+        translate([0,0,6])
+            rotate([90,0,210])
+                cylinder(h=lock_diameter/2, d=4);
         
         hull()
         {
