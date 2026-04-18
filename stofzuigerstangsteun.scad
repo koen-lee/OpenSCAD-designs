@@ -39,19 +39,19 @@ module half_steun() {
             linear_extrude(0.01) {
                     translate([38,0])
                     offset(r=2+2) offset(r=-2)
-                        square([18,32], center=true);
+                        square([18,31], center=true);
             }
             linear_extrude(2) {
                     translate([38,0])
                     offset(r=2) offset(r=-2)
-                        square([18,32], center=true);
+                        square([18,31], center=true);
             }
         }
 
         linear_extrude(30) {
                 translate([38,0])
                 offset(r=2) offset(r=-2)
-                    square([18,32], center=true);
+                    square([18,31], center=true);
             
         circle(d=32+4.01);
         }
