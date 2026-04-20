@@ -27,33 +27,56 @@ module shape() {
         offset(-5*thick)
         shape();
     }
-    translate([0,0,0.4])
-    linear_extrude(h, convexity=4)
+    translate([0,0,-thick])
+    linear_extrude(h+2*thick, convexity=4)
     {
         offset(thick)
         offset(-5*thick)
         shape();
     }
-    translate([0,90,0.4+2])
+    translate([0,90,thick+2])
         cube([1000,5,4],center=true);
-    
-
 }
+
+difference() {
+    
+    linear_extrude(thick, convexity=4)
+    {
+        offset(3*thick)
+        offset(-5*thick)
+        shape();
+    }
+    translate([0,4,-0.1])
+    scale([14,14,10]) {            
+        d=0.9;
+        for(x=[-8:8])
+        for(y=[0:25])
+        {
+            translate([x*1.5,y*sqrt(3)/2])
+                cylinder(h=1, d=d, $fn=6);
+            
+            translate([x*1.5 + 0.75,(y + 0.5)* sqrt(3)/2])
+                cylinder(h=1, d=d, $fn=6);
+        }
+    }
+}
+
+
 translate([0,90])
 {
     difference() {
         hull() {
             translate([0,0,4])
             cube([3,20,8], center=true);
-            translate([0,0,0.2])
-            cube([40,20,0.4], center=true);
+            translate([0,0,thick/2])
+            cube([40,20,thick], center=true);
         }
-        translate([0,0,3+0.4])
+        translate([0,0,3+thick])
         rotate([0,90,0])
             cylinder(d=4.1, h=20, center=true);
-        translate([22,0,4])
+        translate([22,0,4+thick])
             cube([40,17,8], center=true);
-        translate([-22,0,4])
+        translate([-22,0,4+thick])
             cube([40,17,8], center=true);
 
     }
@@ -62,7 +85,7 @@ translate([0,90])
 
 if( $preview)
 {
-translate([0,90,3+0.4])
+translate([0,90,3+thick])
 rotate([0,90,0]) {
     color("red")
         cylinder(d=4, h=20, center=true);
@@ -78,10 +101,10 @@ rotate([0,90,0]) {
 }
 
     color("green"){
-        translate([10,90,0.4+0.1])
+        translate([10,90,thick+0.1])
             lock_bolt();
         mirror([1,0,0])
-        translate([10,90,0.4+0.1])
+        translate([10,90,thick+0.1])
             lock_bolt();
     }  
 } 
