@@ -20,7 +20,7 @@ module shape() {
 }
 
 
- difference(){
+difference(){
     linear_extrude(h, convexity=4)
     {
         offset(3*thick)
@@ -47,7 +47,7 @@ difference() {
         shape();
     }
     translate([0,4,-0.1])
-    scale([14,14,10]) {            
+    scale([16,16,10]) {            
         d=0.9;
         for(x=[-8:8])
         for(y=[0:25])
@@ -61,7 +61,7 @@ difference() {
     }
 }
 
-
+// center spring container
 translate([0,90])
 {
     difference() {
@@ -81,45 +81,56 @@ translate([0,90])
 
     }
 }
+// stiffness center spar 
+translate([-75,99,0])
+    cube([150,1,8]);
 
-
-if( $preview)
-{
-translate([0,90,3+thick])
-rotate([0,90,0]) {
-    color("red")
-        cylinder(d=4, h=20, center=true);
-    color("blue") {
-        cylinder(d=2.5, h=36, center=true);
-        translate([0,0,18])
-            cylinder(d1=2.5, d2=0, h=2);
+if( $preview ) {
+    translate([0,90,3+thick])
+    rotate([0,90,0]) {
+        color("red")
+            cylinder(d=4, h=20, center=true);
+        color("blue") {
+            cylinder(d=2.5, h=36, center=true);
+            translate([0,0,18])
+                cylinder(d1=2.5, d2=0, h=2);
+            
+            translate([0,0,-20])
+                cylinder(d1=5, d2=2.5, h=2);
         
-        translate([0,0,-20])
-            cylinder(d1=5, d2=2.5, h=2);
-    
+        }
     }
-}
-
+    dx=2+4+4*sin(360*$t);
     color("green"){
-        translate([10,90,thick+0.1])
+        translate([dx,90,thick+0.1])
             lock_bolt();
         mirror([1,0,0])
-        translate([10,90,thick+0.1])
+        translate([dx,90,thick+0.1])
+            mirror([0,1,0])
             lock_bolt();
     }  
-} 
+} else {
+    lock_bolt();
+}
 
 module lock_bolt() {
     difference() {
         union() {
             hull() {
-                translate([0,-4.5/2])    cube([74,4.5,3.5]);
-                translate([0,-2/2])    cube([76,2,2.5]);
+                translate([0,-4.5/2])    cube([72,4.5,3.5]);
+                translate([0,-2/2])    cube([74,2,2.5]);
             }
             translate([0,-8/2])      cube([65-thick,8,5]);
             hull() {
-                translate([0,-16/2])      cube([6,16,20]);
-                translate([0,-12/2])      cube([6,12,22]);
+                translate([2, 5,0]) cylinder(r=2, h=1);
+                translate([2,-5,0]) cylinder(r=2, h=1);
+                translate([4, 5,15]) sphere(4);
+                translate([4,-5,15]) sphere(4);
+            }
+            hull() {
+                translate([3,3,8]) cylinder(r=3, h=1);
+                translate([-1,3,13]) sphere(3);
+                translate([3,3,15]) sphere(3);
             }
         }
         // hole for nail
@@ -127,6 +138,7 @@ module lock_bolt() {
         rotate([0,90,0])
             cylinder(d=2.6, h=80, center=true);
         // hole for nail head + drop-in
-            translate([8,-5/2,0.2])      cube([35,5,6]);
+            translate([8,-5/2,0.2])      cube([35,5,4]);
+            translate([8,-4.5/2,0.2])      cube([35,4.5,6]);
     }
 }
