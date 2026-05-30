@@ -114,6 +114,7 @@ module member(n, r1, grow, conv) {
             polygon(trochoid(n, r1, fn));
 }
 module outerRotor() {
+    color("orange")
     rotate([0, 0, -(rpm_demo * 360 * $t) / (N + 1)])
     difference() {
         cylinder(r = rotorOuterR, center = true, h = h - 1);
