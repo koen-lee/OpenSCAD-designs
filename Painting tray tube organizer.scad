@@ -16,8 +16,8 @@ intersection() {
                 //Frame
                 union(){
                     cube([block_x,side,height]);
-                    cube([3,block_y,15]);
-                    cube([15,block_y,1]);
+                    cube([1.2,block_y,15]);
+                    cube([16,block_y,0.6]);
                     translate([block_x-3,0])
                     cube([3,block_y,5]);
                     cube([block_x,side,height]);
@@ -25,10 +25,10 @@ intersection() {
                     cube([block_x,side,height]);
                 }
                 
-                translate([15, 2,-1])
-                    cube([block_x-15-15,side,height]);
-                translate([15, block_y-2-side,-1])
-                    cube([block_x-15-15,side,height]);
+                translate([16, 2,-1])
+                    cube([block_x-16-16,side,height]);
+                translate([16, block_y-2-side,-1])
+                    cube([block_x-16-16,side,height]);
             }
 
 
@@ -51,7 +51,7 @@ intersection() {
                         rotate([-90,0])
                             cylinder(h=side, d=3.5, $fn=16);
                         translate([-3,0,25])
-                            cube([30, side, 1]);
+                            cube([31, side, 1]);
                     }
                     translate([0,side-2,-9])
                     cube([tube_diameter-1,2,1]);
