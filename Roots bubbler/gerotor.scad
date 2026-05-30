@@ -54,6 +54,18 @@ innB_id = 8;  innB_od = 22; innB_w = 7;
 // Outer LARGE-ID bearing width; ID/OD are derived below from the orbit envelope.
 outB_w  = 7;
 
+/* [Drive] */
+// Integral printed pulley on the OUTER rotor (orange, one printed part with the
+// rotor). The belt drives this directly; large diameter = forgiving printed teeth.
+// NOTE on ratio: rotors must run at (N+1):N, i.e. the OUTER turns SLOWER. With a
+// single shared belt that means the outer pulley must be the LARGER pitch radius
+// and the inner the smaller, in the ratio (N+1):N. The proxy radii below are
+// placeholders for fit only; real ratio comes from tooth counts. outPulleyR/
+// innPulleyR are derived after rotorOuterR is known (see derived section).
+outPulleyH  = 12;   // axial height of the outer pulley rim (mm)
+innPulleyH  = 10;   // axial height of the inner sourced pulley (mm)
+beltClear   = 3;    // axial gap between outer pulley and inner pulley region (mm)
+
 /* [Output] */
 // "pair"    : just the meshing rotor pair (default; fast to animate, top view)
 // "harness" : rotors + bearing plates + bearings + inner shaft (3D check)
@@ -74,6 +86,12 @@ rotorOuterR = ro + e + 5;   // outer rotor OD envelope (= housing cylinder radiu
 outB_id_req = 2 * e + innB_od + 2;
 outB_id     = ceil(outB_id_req / 5) * 5;
 outB_od     = outB_id + 2 * 6;
+
+// Pulley pitch radii (proxy, fit-only). Ratio must be (N+1):N with the OUTER the
+// larger. Anchor the outer pulley near the rotor OD and scale the inner down by
+// the speed ratio so the proxy at least shows the correct relative sizes.
+outPulleyR  = rotorOuterR;
+innPulleyR  = outPulleyR * N / (N + 1);
 
 // ---- Trochoid + area --------------------------------------------------------
 // Trochoid point list, faithful to the original rtroch_b:
@@ -121,6 +139,20 @@ module outerRotor() {
         member(N + 1, ro, grow = pinOut, conv = 3);
     }
 }
+
+// Integral printed pulley on the outer rotor: a rim concentric with the outer
+// rotor axis (origin), sitting just above the top bearing plate so the belt clears
+// the housing. Modeled as a smooth rim (teeth omitted); it is part of the orange
+// printed rotor. The bore lets the inner shaft + its outboard bearing pass through.
+module outerPulley() {
+    color("orange")
+    rotate([0, 0, -(rpm_demo * 360 * $t) / (N + 1)])
+    difference() {
+        cylinder(r = outPulleyR, h = outPulleyH, center = true, $fn = 120);
+        // central bore clears the offset inner shaft's full orbit + its bearing.
+        cylinder(d = 2 * e + innB_od + 3, h = outPulleyH + 1, center = true, $fn = 96);
+    }
+}
 module innerRotor() {
     color("yellow")
     translate([0, e, 0])
@@ -156,22 +188,43 @@ module bearingPlate() {
 
 module harness() {
     rotorPair();
-    zPlate = h / 2 + axialGap + plateT / 2;   // plate centre, beyond the rotor end
+    zPlate = h / 2 + axialGap + plateT / 2;        // plate centre, beyond rotor end
+    zPlateTop = zPlate;                            // top fixed plate
+    zOutPul   = zPlate + plateT / 2 + outPulleyH / 2;   // outer pulley above top plate
 
+    // --- Grey fixed world: both bearing plates + the two outer large-ID bearings.
     translate([0, 0,  zPlate]) bearingPlate();
     translate([0, 0, -zPlate]) bearingPlate();
-
-    // Outer large-ID bearing, concentric with the outer rotor (origin axis).
     translate([0, 0,  zPlate]) bearingProxy(outB_id, outB_od, outB_w);
     translate([0, 0, -zPlate]) bearingProxy(outB_id, outB_od, outB_w);
 
-    // Inner shaft + its bearings, on the offset axis.
+    // --- Orange outer rotor's integral pulley, just above the top plate.
+    translate([0, 0, zOutPul]) outerPulley();
+
+    // --- Yellow inner shaft + bearings + sourced pulley, on the offset axis.
+    // The TOP inner bearing moves UP, outboard of the outer pulley, so it clears
+    // the orange pulley. The inner sourced pulley sits beyond that bearing.
+    zInnBearTop = zOutPul + outPulleyH / 2 + beltClear + innB_w / 2;
+    zInnPul     = zInnBearTop + innB_w / 2 + innPulleyH / 2;
+    shaftTop    = zInnPul + innPulleyH / 2 + 5;
+    shaftBot    = -zPlate - plateT / 2 - 5;
+
     translate([0, e, 0]) {
-        color([0.4, 0.4, 0.45])
-            cylinder(d = innB_id, h = h + 2 * (axialGap + plateT) + 30,
-                     center = true, $fn = 48);
-        translate([0, 0,  zPlate]) bearingProxy(innB_id, innB_od, innB_w);
+        // inner shaft spans from below the bottom plate up to above the inner pulley
+        color("yellow")
+            translate([0, 0, (shaftTop + shaftBot) / 2])
+                cylinder(d = innB_id, h = shaftTop - shaftBot, center = true, $fn = 48);
+        // bottom inner bearing stays at the bottom plate (grey = in fixed plate)
         translate([0, 0, -zPlate]) bearingProxy(innB_id, innB_od, innB_w);
+        // top inner bearing moved up, outboard of the orange pulley
+        translate([0, 0, zInnBearTop]) bearingProxy(innB_id, innB_od, innB_w);
+        // inner sourced (non-printed) pulley — yellow, beyond the top bearing.
+        // Note: it sits offset by e, so it does NOT share an axis with the outer
+        // pulley; the belt spans the centre distance e between the two pitch radii.
+        color("yellow")
+        translate([0, 0, zInnPul])
+            rotate([0, 0, -(rpm_demo * 360 * $t) / N])
+            cylinder(r = innPulleyR, h = innPulleyH, center = true, $fn = 64);
     }
 }
 
