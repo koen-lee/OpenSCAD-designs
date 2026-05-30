@@ -48,7 +48,30 @@ rpm_demo = 20;    // arbitrary turns over the $t cycle, for visual checking
 // ---- Derived (single source of truth) --------------------------------------
 e   = ro / N;          // eccentricity == shared generating radius r2
 ri  = ro - e;          // inner member base radius
+
+// Shoelace area of a closed point list (mm^2). The cross-term list is summed by
+// a dot product with a ones-vector (OpenSCAD has no built-in sum()).
+function polyArea(p) =
+    let (cross = [ for (i = [0 : len(p) - 1])
+                     let (j = (i + 1) % len(p))
+                     p[i].x * p[j].y - p[j].x * p[i].y ],
+         ones  = [ for (i = [0 : len(p) - 1]) 1 ])
+    abs(0.5 * (cross * ones));
+
+// Displacement estimate: (outer pocket area - inner lobe area) is the gas
+// volume trapped per chamber pair; over one inner revolution all N chambers
+// sweep once, so volume/rev ~= (A_outer - A_inner) * h. This ignores the pin
+// rounding offsets (small) and is a first-order estimate for comparing options.
+A_outer = polyArea(trochoid(N + 1, ro, fn));
+A_inner = polyArea(trochoid(N, ri, fn));
+dispChamber = (A_outer - A_inner);              // mm^2 cross-section of voids
+volPerRev   = dispChamber * h / 1000;           // cm^3 per inner revolution
+flow2000    = volPerRev * 2000 / 1000;          // L/min at 2000 rpm (ideal)
+
 echo(N = N, outer_teeth = N + 1, ro = ro, eccentricity_e = e, inner_base_ri = ri);
+echo(A_outer_mm2 = A_outer, A_inner_mm2 = A_inner,
+     voids_mm2 = dispChamber, vol_per_rev_cm3 = volPerRev,
+     ideal_Lmin_at_2000rpm = flow2000);
 
 // Trochoid point list, faithful to the original rtroch_b:
 //   r2 = r1/(n-1);  a1 = i*360/steps;  a2 = a1 * r1/r2

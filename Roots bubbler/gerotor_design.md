@@ -56,12 +56,60 @@ each rotor pinned to its shaft, timed externally by a **plain toothed belt** at
 
 ## Fixed parameters
 
-- **Inner N = 4, outer = 5** → **5:4 belt** (e.g. 25T inner-shaft : 20T outer-shaft,
-  or any 5:4 such as 30:24).
-- Events/rev = 5 → fundamental tone ~167 Hz @ 2000 RPM, ~125 Hz @ 1500 RPM.
-  Comfortably in the low/broadband zone per the acoustic objective.
+- **Inner N = 3, outer = 4** → **4:3 belt** (e.g. 24T inner-shaft : 18T outer-shaft,
+  or any 4:3). N=3 is the current lead: ~19% more displacement than N=4 at equal size
+  (see table) and a lower tone, at the cost of more inherent pulsation (handle with
+  helix). N=4/5 remains a one-character experiment in the CAD.
+- Events/rev = 3 → fundamental tone ~100 Hz @ 2000 RPM, ~75 Hz @ 1500 RPM. Well into
+  the low/broadband zone per the acoustic objective.
 - **Eccentricity `e` baked into a cheap, reprintable bearing plate** (in-plane center
   distance).
+
+## Eccentricity — derived, not hand-set (VERIFIED)
+
+The eccentricity is **not a free parameter**. Each member is a trochoid with the
+relation `r2 = r1 / (n - 1)`; a conjugate pair shares the same generating radius `r2`,
+and the eccentricity equals that shared `r2`:
+
+    e = ro / N            (ro = outer base radius, N = inner tooth count)
+
+so `e` falls out of rotor size and lobe count. Verified against the original 2014
+geometry by rendering: for N=3, ro=30 the formula gives **e = 10 mm**, matching the
+value the original had hand-typed in its `translate` — confirming the large
+eccentricity at low lobe count is real, not a fudge. The inner base radius is then
+`ri = ro - e`.
+
+This is now wired as a single source of truth in [gerotor.scad](gerotor.scad): change
+`ro` or `N` and `e`, the inner profile, and the inner rotor's offset all move together.
+
+(Earlier notes used `e = rg/N` with a separate `rgi` inner radius — that was an
+unverified guess and rendered as the wrong tooth count; the relation above is the
+verified one.)
+
+## Displacement vs. lobe count and scale (measured from CAD)
+
+The model echoes void cross-section (outer pocket area − inner lobe area) and a derived
+volume/rev. First-order estimate (ignores pin rounding); useful for comparing options.
+Volumes below are for h = 100 mm:
+
+| Config        | e (mm) | void area (mm²) | vol/rev (cm³) | ideal L/min @ 2000 rpm |
+|---------------|:------:|:---------------:|:-------------:|:----------------------:|
+| N=3, ro=30    |   10   |      1257       |      126      |          251           |
+| N=4, ro=30    |  7.5   |      1061       |      106      |          212           |
+| **N=3, ro=60**|  **20**|    **5028**     |    **503**    |        **1006**        |
+| N=4, ro=60    |   15   |      4243       |      424      |          849           |
+
+Reads:
+
+- **N=3 > N=4 on displacement** (~19% more void at equal size) — the low lobe count is
+  the better volumetric choice, and it gives the lower tone too.
+- **2× linear scale → ~4× void area** (square law), as expected; combined with doubling
+  height gives the ~8× displacement target.
+- **Headroom vs. the 500 L/min hard target:** the lead geometry (N=3, ro=60) already
+  ideals ~1006 L/min at 2000 rpm with just h=100 mm. So even at ~50% volumetric
+  efficiency (realistic for printed clearances at 4 kPa) the target is reachable at
+  2000 rpm — or at a lower, quieter RPM if sealing is better. **The geometry is not the
+  bottleneck; leakage is.**
 
 ## The catch with "reprint the plate" tuning
 
