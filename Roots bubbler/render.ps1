@@ -43,6 +43,11 @@ param(
 
 $ErrorActionPreference = "Stop"
 
+# Format numbers with a dot regardless of system locale (Dutch locale uses a
+# comma, which OpenSCAD's -D parser rejects). Use for every numeric -D value.
+$inv = [System.Globalization.CultureInfo]::InvariantCulture
+function n([double]$v) { $v.ToString($inv) }
+
 # --- Locate OpenSCAD --------------------------------------------------------
 $scad = @(
     "C:\Program Files\OpenSCAD\openscad.exe",
@@ -72,8 +77,13 @@ $camera = "0,0,0,0,0,0,250"
 function Get-Echo {
     param([string[]]$Defs)
     $dargs = @(); foreach ($x in $Defs) { $dargs += "-D"; $dargs += $x }
-    $raw = & $scad -o "$env:TEMP\_echo.txt" --export-format echo @dargs $src 2>&1 | Out-String
-    [regex]::Matches($raw, 'ECHO: .*') | ForEach-Object { $_.Value }
+    $echoFile = Join-Path $env:TEMP "_scad_echo.echo"
+    # OpenSCAD writes echo output both to stderr and (with this export format) to
+    # the output file. Read the file: it is locale-proof and reliable.
+    & $scad -o $echoFile --export-format echo @dargs $src 2>&1 | Out-Null
+    if (Test-Path $echoFile) {
+        Get-Content $echoFile | Where-Object { $_ -match 'ECHO:' }
+    }
 }
 
 Write-Host "OpenSCAD: $scad" -ForegroundColor DarkGray
@@ -88,7 +98,7 @@ if ($EchoOnly) { return }
 # --- Render -----------------------------------------------------------------
 $frames = if ($Sweep -gt 0) {
     0..($Sweep - 1) | ForEach-Object { [math]::Round($_ / $Sweep, 4) }
-} else { @($t) }
+} else { @([math]::Round($t, 4)) }
 
 Write-Host "`n--- render ($($frames.Count) frame(s)) ---" -ForegroundColor Cyan
 $first = $null
@@ -101,10 +111,10 @@ foreach ($ft in $frames) {
 
     $dargs = @(); foreach ($x in $D) { $dargs += "-D"; $dargs += $x }
     & $scad -o $png --imgsize="$Size,$Size" --camera=$camera --projection=ortho `
-        -D "`$t=$ft" @dargs $src 2>&1 | Out-Null
+        -D "`$t=$(n $ft)" @dargs $src 2>&1 | Out-Null
 
     if (Test-Path $png) {
-        Write-Host ("  t={0,-6} -> {1}" -f $ft, (Resolve-Path $png).Path)
+        Write-Host ("  t={0,-6} -> {1}" -f (n $ft), (Resolve-Path $png).Path)
         if (-not $first) { $first = $png }
     } else {
         Write-Host "  t=$ft -> FAILED" -ForegroundColor Red
