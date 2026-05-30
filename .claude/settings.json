@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(& \"c:\\Dev\\OpenSCAD-designs\\Roots bubbler\\render.ps1\":*)",
+      "PowerShell(*render.ps1*)",
+      "Bash(./render.ps1:*)",
+      "Bash(pwsh*render.ps1*)"
+    ]
+  }
+}

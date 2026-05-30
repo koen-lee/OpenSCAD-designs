@@ -127,6 +127,21 @@ Current-CAD note: in [gerotor.scad](gerotor.scad) the profile relationship is se
 generation.** That decoupling is exactly what will bite on reprint and is the first
 real CAD task to fix.
 
+## Large-ID outer bearing — sizing and sourcing (priced)
+
+The outer rotor rides a large-ID bearing whose bore must clear the inner rotor's
+orbit. The CAD derives it (echoed): required ID = `2*e + inner_bearing_OD + slack`.
+
+- Prototype (ro=30, e=10): required ID ≈ 44 mm → chosen Ø45 ID / Ø57 OD.
+- **Full scale (ro=60, e=20): required ID ≈ 64 mm → a Ø65 ID thin-section bearing**
+  (e.g. 61813 / 6813, 65/85/10).
+
+**Sourcing check (priced):** Ø65 ID thin-section bearing ≈ **€15/pc, ~1 week
+delivery** from a reputable supplier — not a blocker. (AliExpress lists ~€0.87, not
+trusted for a precision journal that *is* the tip-clearance reference — likely
+pre-rusted / out-of-tolerance. The bearing's runout becomes the rotor's runout, so
+buy the real part.)
+
 ## Bearing-plate concept (Arrangement 2, baked-in `e`)
 
 - **One end plate carries both bearing bores**, centers exactly `e` apart. This plate
