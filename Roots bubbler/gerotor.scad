@@ -21,7 +21,7 @@ nB = nA-1;
 rotate([0,0,-(20*360*$t)/nA]) difference() {	
 	cylinder(r=45, center=true, h=99);
 	linear_extrude(100, center=true, convexity=3, twist = nB*3)
-        offset(r=1.1, $fn=32)
+        offset(r=1.5, $fn=32)
             rtroch_b(n=nA);
 }
 
