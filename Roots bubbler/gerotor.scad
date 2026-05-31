@@ -53,13 +53,13 @@ outB_w  = 7;
 // Top plate only needs to seat the outer bearing + shaft clearance — no ports.
 topPlateT = outB_w + 4;  // just bearing width + a little wall each side
 
-/* [Top bearing bridge] */
-// The top inner bearing sits above the orange pulley and must be held by the FIXED
-// world. A bridge (yoke) rises from the top plate on posts that clear the pulley OD,
-// spans over it, and caps the inner bearing's outer race — screwed down.
-bridgePostD = 8;   // diameter of the support posts (mm)
-bridgeCapT  = 6;   // thickness of the bridge cap that holds the bearing (mm)
-screwD      = 3;   // M3 cap screws
+/* [Labyrinth seal] */
+// Shallow circumferential grooves on the outer rotor OD that mesh with matching
+// ridges on the housing bore to restrict axial leakage without contact friction.
+// Set labN = 0 to disable (plain close-clearance gap).
+labN     = 3;    // number of labyrinth groove pairs
+labDepth = 0.6;  // groove depth (mm) — also the housing ridge height
+labWidth = 1.2;  // groove width (mm)
 
 /* [Ports] */
 portID   = 15;   // hose inner Ø to match (mm) — see design_constraints 
@@ -79,16 +79,14 @@ portArc    = 90;  // deg, angular width of each kidney
 // portRout/portRin (kidney slot radii) are derived after `e` — see derived section.
 
 /* [Drive] */
-// Integral printed pulley on the OUTER rotor (orange, one printed part with the
-// rotor). The belt drives this directly; large diameter = forgiving printed teeth.
-// NOTE on ratio: rotors must run at (N+1):N, i.e. the OUTER turns SLOWER. With a
-// single shared belt that means the outer pulley must be the LARGER pitch radius
-// and the inner the smaller, in the ratio (N+1):N. The proxy radii below are
-// placeholders for fit only; real ratio comes from tooth counts. outPulleyR/
-// innPulleyR are derived after rotorOuterR is known (see derived section).
-outPulleyH  = 12;   // axial height of the outer pulley rim (mm)
-innPulleyH  = 10;   // axial height of the inner sourced pulley (mm)
-beltClear   = 3;    // axial gap between outer pulley and inner pulley region (mm)
+// GT2 belt teeth are printed directly into the outer rotor OD at the top end,
+// above the top bearing pocket. The belt pitch radius equals rotorOuterR.
+// NOTE on ratio: rotors run at (N+1):N — the OUTER turns SLOWER. A single belt
+// means the outer rotor (larger radius) drives the inner shaft pulley (smaller).
+// innPulleyR is derived to give the correct (N+1):N speed ratio.
+gt2RimH     = 12;   // axial height of the GT2 belt region on the outer rotor (mm)
+innPulleyH  = 10;   // axial height of the inner shaft sourced pulley (mm)
+innPulleyR  = rotorOuterR * N / (N + 1);  // derived pitch radius for correct ratio
 
 /* [Output] */
 // "pair"    : just the meshing rotor pair (default; fast to animate, top view)
@@ -118,13 +116,7 @@ outB_id_req = 2 * (e + innB_id / 2 + 2);
 outB_id     = ceil(outB_id_req / 5) * 5;
 outB_od     = outB_id + 2 * 6;
 
-// Pulley pitch radii (proxy, fit-only). Ratio must be (N+1):N with the OUTER the
-// larger. Anchor the outer pulley near the rotor OD and scale the inner down by
-// the speed ratio so the proxy at least shows the correct relative sizes.
-outPulleyR  = rotorOuterR/2;
-innPulleyR  = outPulleyR * N / (N + 1);
-
-// Pocket depth and duct radius (derived here so hRotor can use pocketDepth above).
+// Pocket depth: bearing width + a little clearance, used to size the kidney recess.
 pocketDepth = outB_w + 2;
 ductR       = (portRout + portRin )/ 2;
 
@@ -149,50 +141,48 @@ module member(n, r1, grow, conv) {
         offset(r = grow, $fn = 32)
             polygon(trochoid(n, r1, fn));
 }
-// Outer rotor height: full h, but the bottom is recessed by pocketDepth so the
-// bearing boss fits inside. Inner rotor is shorter: cleared away at the bottom by
-// outB_w (boss height) + axialGap so it never touches the bearing.
-hRotor     = h;                      // outer rotor full height; boss pocket cut below
-hInnerRotor = h - outB_w - axialGap; // inner rotor shortened at bottom only
-// Z offset to keep inner rotor centred in the working volume (shift up by half the shortening)
-zInnerRotorOff = (outB_w + axialGap) / 2;
+// Outer rotor is full height h. Both ends carry a bearing pocket (outer race press-fit).
+// The GT2 belt rim sits above the top bearing pocket as an integral raised band.
+// Inner rotor is shortened symmetrically so it clears both bearing pockets.
+hRotor      = h;
+hInnerRotor = h - 2 * outB_w - 2 * axialGap;  // clear bearing pocket at each end
 
 module outerRotor() {
     color("orange")
     rotate([0, 0, -(rpm_demo * 360 * $t) / (N + 1)])
     difference() {
-        cylinder(r = rotorOuterR, center = true, h = hRotor);
+        union() {
+            cylinder(r = rotorOuterR, center = true, h = hRotor);
+            // GT2 belt rim: raised band at the top, above the top bearing pocket.
+            // Modelled as a smooth cylinder proxy; real GT2 teeth added later.
+            translate([0, 0, hRotor / 2 + gt2RimH / 2])
+                cylinder(r = rotorOuterR, h = gt2RimH, center = true, $fn = 120);
+        }
         member(N + 1, ro, grow = pinOut, conv = 3);
-        // Bearing seat: outer rotor grips the outer race of the bottom bearing.
-        // Cut a blind pocket from the bottom face so the bearing (OD = outB_od,
-        // width = outB_w) press-fits into the rotor. Air escapes through the
-        // trochoid voids outside the bearing OD.
+        // Bottom bearing pocket — outer race press-fit, air escapes via trochoid voids.
         translate([0, 0, -(hRotor / 2 - outB_w / 2)])
             cylinder(d = outB_od + 0.2, h = outB_w + 1, center = true, $fn = 96);
+        // Top bearing pocket — symmetric with bottom.
+        translate([0, 0,  (hRotor / 2 - outB_w / 2)])
+            cylinder(d = outB_od + 0.2, h = outB_w + 1, center = true, $fn = 96);
+        // Labyrinth seal grooves on the OD — circumferential, spaced along the rotor height.
+        // Housing bore gets matching ridges (same depth/width) for a non-contact seal.
+        if (labN > 0) {
+            labSpacing = (hRotor - 2 * outB_w) / (labN + 1);
+            for (i = [1 : labN])
+                translate([0, 0, -(hRotor / 2 - outB_w) + i * labSpacing])
+                    difference() {
+                        cylinder(r = rotorOuterR + 0.1, h = labWidth, center = true, $fn = 120);
+                        cylinder(r = rotorOuterR - labDepth, h = labWidth + 1, center = true, $fn = 120);
+                    }
+        }
     }
 }
 
-// Integral printed pulley on the outer rotor: a rim concentric with the outer
-// rotor axis (origin), sitting just above the top bearing plate so the belt clears
-// the housing. Modeled as a smooth rim (teeth omitted); it is connected to the orange
-// printed rotor. The bore lets the inner shaft + its outboard bearing pass through.
-module outerPulley() {
-    color("orange")
-    rotate([0, 0, -(rpm_demo * 360 * $t) / (N + 1)])
-    difference() {
-        union() {
-            cylinder(r = outPulleyR, h = outPulleyH, center = true, $fn = 120);
-            translate([0,0,-outPulleyH])
-            cylinder(d = outB_id, h = outPulleyH, center = true, $fn = 120);
-        }
-        // central bore clears the offset inner shaft's full orbit. The bearing is above, so it doesn't conflict.
-        cylinder(d = 2 * e + innB_id + 3, h = 3*outPulleyH + 1, center = true, $fn = 96);
-    }
-}
 module innerRotor() {
     color("yellow")
-    translate([0, e, zInnerRotorOff])
     rotate([0, 0, -(rpm_demo * 360 * $t) / N])
+    translate([0, e, 0])
     linear_extrude(hInnerRotor, center = true, convexity = 4)
         offset(r = pinIn, $fn = 32)
             polygon(trochoid(N, ri, fn));
@@ -211,15 +201,23 @@ module bearingProxy(id, od, w) {
 }
 
 // ---- Top plate --------------------------------------------------------------
-// Thin: seats the outer bearing (press-fit bore at origin) and has a shaft
-// clearance hole at the offset axis. No ports, no inner bearing bore.
+// Mirror of the bottom plate architecture, minus kidneys and ports.
+// Boss at centre (OD = outB_id) seats the outer bearing inner race, rotor grips
+// the outer race. Inner shaft clearance hole at the offset axis.
 module topPlate() {
+    plateR = rotorOuterR + wall + e;
+    bossH  = outB_w;
     color([0.85, 0.8, 0.7])
     difference() {
-        cylinder(r = rotorOuterR + wall + e, h = topPlateT, center = true, $fn = 120);
-        cylinder(d = outB_od + 0.1, h = topPlateT + 1, center = true, $fn = 120);
+        union() {
+            cylinder(r = plateR, h = topPlateT, center = true, $fn = 120);
+            // Boss protrudes into rotor space from the rotor-facing face (−topPlateT/2)
+            translate([0, 0, -(topPlateT / 2 + bossH / 2)])
+                cylinder(d = outB_id, h = bossH, center = true, $fn = 120);
+        }
+        // Inner shaft clearance through full plate + boss
         translate([0, e, 0])
-            cylinder(d = innB_id + 1, h = topPlateT + 1, center = true, $fn = 64);
+            cylinder(d = innB_id + 1, h = topPlateT + 2 * bossH + 2, center = true, $fn = 64);
     }
 }
 
@@ -276,114 +274,49 @@ module bottomPlate() {
     }
 }
 
-// Bridge (yoke) that holds the top inner bearing from the FIXED world. Two posts
-// rise from the top plate, just outside the orange pulley OD, and carry a cap that
-// captures the top inner bearing's outer race over the offset axis. Screws shown as
-// recessed holes in the cap. Grey = fixed.
-module topBridge(zPlateTop, zInnBearTop) {
-    // Posts sit on the offset axis line (y = e), placed left/right in x just outside
-    // the orange pulley OD. The cap is a flat bar between them, centred over the top
-    // inner bearing at (0, e), with a pocket that captures the bearing's outer race.
-    postX  = outPulleyR + bridgePostD / 2 + 2;       // x of each post (clears pulley)
-    postZ0 = zPlateTop + topPlateT / 2;              // post base = top face of plate
-    capZ   = zInnBearTop;                            // cap centred on the top bearing
-    postH  = capZ - postZ0;
-    color([0.55, 0.55, 0.6]) {
-        // two support posts, from the top plate up to the cap, flanking the bearing
-        for (sx = [-1, 1])
-            translate([sx * postX, e, postZ0 + postH / 2])
-                cylinder(d = bridgePostD, h = postH, center = true, $fn = 32);
 
-        // cap bar over the bearing, spanning between the two posts
-        translate([0, e, capZ])
-        difference() {
-            hull() for (sx = [-1, 1])
-                translate([sx * postX, 0, 0])
-                    cylinder(d = bridgePostD + 4, h = bridgeCapT, center = true, $fn = 32);
-            // pocket seating the bearing outer race (blind, opens downward)
-            translate([0, 0, -bridgeCapT / 2 + 0.5])
-                cylinder(d = innB_od + 0.3, h = bridgeCapT, center = true, $fn = 64);
-            // shaft clearance up to the pulley
-            cylinder(d = innB_id + 4, h = bridgeCapT + 2, center = true, $fn = 32);
-            // M3 screw holes through the cap into each post
-            for (sx = [-1, 1])
-                translate([sx * postX, 0, 0])
-                    cylinder(d = screwD, h = bridgeCapT + 2, center = true, $fn = 24);
+// ---- Bearings (shaft + bearing proxies) -------------------------------------
+// Outer rotor rides two outer bearings: outer race in rotor pockets, inner race
+// on plate bosses. Inner shaft has one bearing in the bottom plate outside face.
+module bearings() {
+    zBot     = hRotor / 2 + axialGap + botPlateT / 2;
+    zTop     = hRotor / 2 + axialGap + topPlateT / 2;
+    shaftBot = -(zBot + botPlateT / 2 + 5);
+    shaftTop =   zTop + topPlateT / 2 + innPulleyH + 5;
+
+    // Bottom outer bearing — inner race on bottom plate boss, outer race in rotor
+    translate([0, 0, -(hRotor / 2 - outB_w / 2)])
+        bearingProxy(outB_id, outB_od, outB_w);
+
+    // Top outer bearing — inner race on top plate boss, outer race in rotor
+    translate([0, 0,  (hRotor / 2 - outB_w / 2)])
+        bearingProxy(outB_id, outB_od, outB_w);
+
+    // Bottom inner bearing — recessed into the outside face of the bottom plate
+    translate([0, e, -(zBot + botPlateT / 2) + innB_w / 2 + 0.5])
+        bearingProxy(innB_id, innB_od, innB_w);
+
+    // Inner shaft + sourced pulley above the top plate, on the offset axis
+    translate([0, e, 0]) {
+        color("yellow") {
+            translate([0, 0, (shaftTop + shaftBot) / 2])
+                cylinder(d = innB_id, h = shaftTop - shaftBot, center = true, $fn = 48);
+            // Sourced pulley sits above the top plate; ratio (N+1):N with outer rotor
+            translate([0, 0, zTop + topPlateT / 2 + innPulleyH / 2 + 2])
+                rotate([0, 0, -(rpm_demo * 360 * $t) / N])
+                    cylinder(r = innPulleyR, h = innPulleyH, center = true, $fn = 64);
         }
     }
 }
 
-// ---- Bearings (shaft + four bearing proxies) --------------------------------
-// All Z positions are derived from the same global params used by harness() and
-// pair(), so calling bearings() in either context puts hardware at consistent coords.
-module bearings() {
-    zTop      = hRotor / 2 + axialGap + topPlateT / 2;
-    zBot      = hRotor / 2 + axialGap + botPlateT / 2;
-    zOutPul   = zTop + topPlateT / 2 + outPulleyH / 2 + 1;
-    zInnBearTop = zOutPul + outPulleyH / 2 + beltClear + innB_w / 2;
-    zInnPul     = zInnBearTop + innB_w / 2 + innPulleyH / 2;
-    shaftTop    = zInnPul + innPulleyH / 2 + 5;
-    shaftBot    = -zBot - botPlateT / 2 - 5;
-
-    // Top outer bearing — seated in the top plate at origin axis
-    translate([0, 0, zTop])
-        bearingProxy(outB_id, outB_od, outB_w);
-
-    // Bottom outer bearing — press-fit into the outer rotor's bottom pocket;
-    // inner race rests on the plate boss, outer race gripped by the rotor.
-    translate([0, 0, -(hRotor / 2 - outB_w / 2)])
-        bearingProxy(outB_id, outB_od, outB_w);
-
-    // Bottom inner bearing — recessed into the outside face of the bottom plate
-    translate([0, e, -zBot - botPlateT / 2 + innB_w / 2 + 0.5])
-        bearingProxy(innB_id, innB_od, innB_w);
-
-    translate([0, e, 0]) {
-        // Yellow inner shaft — spans from below the bottom plate to above the inner pulley
-        color("yellow")
-            translate([0, 0, (shaftTop + shaftBot) / 2])
-                cylinder(d = innB_id, h = shaftTop - shaftBot, center = true, $fn = 48);
-
-        // Top inner bearing — outboard of the orange pulley, on the offset axis
-        translate([0, 0, zInnBearTop])
-            bearingProxy(innB_id, innB_od, innB_w);
-    }
-}
-
 module harness() {
-    // Plate centres — plates are offset from rotor end by axialGap + half plate thickness.
-    // Rotor effective half-height is hRotor/2.
-    zTop = hRotor / 2 + axialGap + topPlateT / 2;
     zBot = hRotor / 2 + axialGap + botPlateT / 2;
-    zPlateTop = zTop;
-    zOutPul   = zTop + topPlateT / 2 + outPulleyH / 2 + 1;
-    zInnBearTop = zOutPul + outPulleyH / 2 + beltClear + innB_w / 2;
-    zInnPul     = zInnBearTop + innB_w / 2 + innPulleyH / 2;
+    zTop = hRotor / 2 + axialGap + topPlateT / 2;
 
-    // --- Top plate (thin): outer bearing centred in plate thickness
-    translate([0, 0,  zTop]) topPlate();
-
-    // --- Bottom plate (thick): flat disc with rotor-facing cavity
     translate([0, 0, -zBot]) bottomPlate();
-
-    // --- Bearings + inner shaft
+    translate([0, 0,  zTop]) topPlate();
+    rotorPair();
     bearings();
-
-    // --- Orange outer rotor's integral pulley, just above the top plate.
-    translate([0, 0, zOutPul]) outerPulley();
-
-    // --- Yellow inner sourced (non-printed) pulley, on the offset axis beyond the top bearing.
-    // Note: offset by e, so it does NOT share an axis with the outer pulley;
-    // the belt spans the centre distance e between the two pitch radii.
-    translate([0, e, zInnPul])
-        rotate([0, 0, -(rpm_demo * 360 * $t) / N])
-        color("yellow")
-            cylinder(r = innPulleyR, h = innPulleyH, center = true, $fn = 64);
-
-    // --- Top bridge that fixes the upper inner bearing to the world.
-    topBridge(zPlateTop, zInnBearTop);
-
-    // Ports are axial ducts — hose fittings attach directly to the outside plate face.
 }
 
 // ---- Output dispatch --------------------------------------------------------
