@@ -46,14 +46,17 @@ twist    = 0;     // total helical twist over height (deg); see design notes
 fn       = 256;   // profile resolution (points around the trochoid)
 
 /* [Bearing harness] */
-axialGap = 0.15;  // mm, target rotor-to-plate clearance (set by shims, not Z)
-plateT   = 28;    // bearing-plate thickness (mm). Must be ≥ portID so the duct is
-                  // at least 1× diameter long before opening — prevents whistle.
-wall     = 4;     // housing wall around the outer bearing (mm)
+axialGap  = 0.15;  // mm, target rotor-to-plate clearance (set by shims, not Z)
+// Bottom plate is thick: must fit both bearings plus blind kidney pockets (≥ portID
+// deep) plus a solid floor — prevents any through-leak and damps whistle.
+botPlateT = 28;
+wall      = 4;     // housing wall around the outer bearing (mm)
 // Inner shaft bearing (default 608: 8 ID / 22 OD / 7 W). Edit to a sourced part.
 innB_id = 8;  innB_od = 22; innB_w = 7;
 // Outer LARGE-ID bearing width; ID/OD are derived below from the orbit envelope.
 outB_w  = 7;
+// Top plate only needs to seat the outer bearing + shaft clearance — no ports.
+topPlateT = outB_w + 4;  // just bearing width + a little wall each side
 
 /* [Top bearing bridge] */
 // The top inner bearing sits above the orange pulley and must be held by the FIXED
@@ -75,9 +78,9 @@ portLen  = 30;   // spout duct length (mm); ≥ portID for smooth entry (no whis
 //   intake centre = 90 + 5 + 50 = 145°  spans  95° → 195°
 //   outlet centre = 90 - 5 - 50 =  35°  spans -15° → 85°  (= 345° → 85°)
 //   bottom land ≈ 195° → 345° = 150° — generously separates the two far ends
-intakeMid  = 145;  // deg, centre of intake kidney
-outletMid  = 35;   // deg, centre of outlet kidney
-portArc    = 100;  // deg, angular width of each kidney
+intakeMid  = 140;  // deg, centre of intake kidney
+outletMid  = 40;   // deg, centre of outlet kidney
+portArc    = 90;  // deg, angular width of each kidney
 // portRout/portRin (kidney slot radii) are derived after `e` — see derived section.
 
 /* [Drive] */
@@ -96,7 +99,7 @@ beltClear   = 3;    // axial gap between outer pulley and inner pulley region (m
 // "pair"    : just the meshing rotor pair (default; fast to animate, top view)
 // "harness" : rotors + bearing plates + bearings + inner shaft (3D check)
 // "plate"   : the reprintable bearing plate alone (for printing/inspection)
-mode = "pair"; // [pair, harness, plate]
+mode = "pair"; // [pair, harness, bottom_plate, top_plate]
 
 /* [Animation] */
 rpm_demo = 20;    // arbitrary turns over the $t cycle, for visual checking
@@ -110,10 +113,12 @@ rotorOuterR = ro + e + 5;   // outer rotor OD envelope (= housing cylinder radiu
 portRout = ro - 1;
 portRin  = ro - e - 2;
 
-// Large-ID outer bearing derived from the orbit envelope so the inner rotor and
-// its shaft clear the bearing centre: clear bore = inner orbit (2*e) + inner
-// bearing OD + slack, rounded up to a 5 mm step. OD = ID + thin-section ring.
-outB_id_req = 2 * e + innB_od + 2;
+// Outer bearing ID — shaft-clearance only (inner bearing is now outboard of the
+// outer bearing, so only the inner *shaft* passes through the outer bearing centre).
+// Required clear bore = 2*(e + innB_id/2 + slack), rounded up to a 5 mm step.
+// This is much smaller than the old orbit-clearing size and stops the bearing
+// intruding on the kidney annulus. See gerotor_design.md (Outer bearing ID section).
+outB_id_req = 2 * (e + innB_id / 2 + 2);
 outB_id     = ceil(outB_id_req / 5) * 5;
 outB_od     = outB_id + 2 * 6;
 
@@ -188,18 +193,81 @@ module bearingProxy(id, od, w) {
     }
 }
 
-// Reprintable bearing plate. The outer-bearing housing bore is on the OUTER ROTOR
-// AXIS (origin = centre of the harness); the inner-shaft bearing bore is offset by
-// e. The plate is centred on the origin too, with its radius grown by `e` so it
-// still reaches the offset inner bore. Centre distance = e is the single precision
-// dimension and is derived, so it cannot drift.
-module bearingPlate() {
+// ---- Top plate --------------------------------------------------------------
+// Thin: seats the outer bearing (press-fit bore at origin) and has a shaft
+// clearance hole at the offset axis. No ports, no inner bearing bore.
+module topPlate() {
     color([0.85, 0.8, 0.7])
     difference() {
-        cylinder(r = rotorOuterR + wall + e, h = plateT, center = true, $fn = 120);
-        cylinder(d = outB_od + 0.1, h = plateT + 1, center = true, $fn = 120);
+        cylinder(r = rotorOuterR + wall + e, h = topPlateT, center = true, $fn = 120);
+        cylinder(d = outB_od + 0.1, h = topPlateT + 1, center = true, $fn = 120);
         translate([0, e, 0])
-            cylinder(d = innB_od + 0.1, h = plateT + 1, center = true, $fn = 96);
+            cylinder(d = innB_id + 1, h = topPlateT + 1, center = true, $fn = 64);
+    }
+}
+
+// ---- Bottom plate -----------------------------------------------------------
+// Architecture (from your images):
+//   ROTOR-FACING side: one unified cavity combining the outer bearing bore (centre)
+//     + kidney arc pockets (flanking the bearing), all at depth `pocketDepth` from
+//     the rotor face. The bearing sits in the centre of this cavity; kidneys extend
+//     outward from it; grey plate grips bearing inner race, orange rotor presses on OD.
+//   OUTSIDE face: solid except two axial duct holes (portID) at `ductR` and the
+//     inner shaft clearance. Ducts connect the kidney pocket floor to the outside
+//     for direct hose fitting — no radial bores, fully printable without support.
+//   INNER bearing (yellow shaft): bore from outside face, shaft clearance through.
+
+// Pocket depth from rotor face — must fit the outer bearing width.
+pocketDepth = outB_w + 2;   // bearing width + 1 mm each side for shoulder
+// Duct radius: at the outer edge of the kidney, clear of the inner bearing.
+ductR = portRout + portID / 2 + 1;  // just outside the kidney outer edge
+
+module bottomPlate() {
+    plateR = rotorOuterR + wall + e;
+    // Blind kidney pocket: a kidney solid sized to kidneyDepth, aligned to the
+    // ROTOR-FACING face (top of the plate, z = +botPlateT/2 when centred).
+    // Translate so its top face is flush with the rotor-facing face.
+    // kidneyZ: centre of the cutter so its TOP is at botPlateT/2 + 1 (1 mm above
+    // the rotor face — guaranteed to break through) and it extends kidneyDepth
+    // into the plate, leaving a solid floor. Extra +2 on height, centre shifted up 1.
+    kidneyZ = botPlateT / 2 + 1 - kidneyDepth / 2;
+
+    color([0.85, 0.8, 0.7])
+ 
+        difference() {
+           union() {
+            // Outer bearing bore — extends from ROTOR-FACING face (grey plate grips the ID /
+            // inner race; orange rotor presses against the OD / outer race from outside).
+            // Bore = outB_id + press clearance, depth = outB_w + 0.5, from rotor face.
+            translate([0, 0, botPlateT / 2 + outB_w  / 2])
+                cylinder(d = outB_id + 0.1, h = outB_w, center = true, $fn = 120);
+            cylinder(r = plateR, h = botPlateT, center = true, $fn = 120);
+           }
+        // inner bearing bore at offset axis — from outside face
+        translate([0, e, -botPlateT / 2 + (innB_w + 0.5) / 2])
+            cylinder(d = innB_od + 0.1, h = innB_w + 0.6, center = true, $fn = 96);
+
+        // inner shaft clearance through the full plate (shaft passes all the way through)
+        translate([0, e, 0])
+            cylinder(d = innB_id + 1, h = botPlateT + 2 * outB_w + 1, center = true, $fn = 64);
+
+        // Blind kidney pockets — open on rotor-facing side, solid floor on outside.
+        // kidneyZ is set so the cutter top is 1 mm above the rotor face (breaks
+        // through cleanly); the floor stays solid toward the outside face.
+        translate([0, 0, kidneyZ])
+            kidneySolid(intakeMid, portArc, portRin, portRout, kidneyDepth + 2);
+        translate([0, 0, kidneyZ])
+            kidneySolid(outletMid, portArc, portRin, portRout, kidneyDepth + 2);
+
+        // Axial duct: vertical cylinder straight through the plate, connecting the
+        // kidney pocket to the outside face for direct hose fitting.
+        // Placed at portRout - portID/2 - 1 so the duct sits fully within the kidney
+        // annulus and clears the inner bearing region.
+        ductR = portRout +3;
+        for (mid = [intakeMid, outletMid])
+            rotate([0, 0, mid])
+            translate([ductR, 0, 0])
+                cylinder(d = portID, h = botPlateT + 2, center = true, $fn = 48);
     }
 }
 
@@ -212,7 +280,7 @@ module topBridge(zPlateTop, zInnBearTop) {
     // the orange pulley OD. The cap is a flat bar between them, centred over the top
     // inner bearing at (0, e), with a pocket that captures the bearing's outer race.
     postX  = outPulleyR + bridgePostD / 2 + 2;       // x of each post (clears pulley)
-    postZ0 = zPlateTop + plateT / 2;                 // post base = top face of plate
+    postZ0 = zPlateTop + topPlateT / 2;              // post base = top face of plate
     capZ   = zInnBearTop;                            // cap centred on the top bearing
     postH  = capZ - postZ0;
     color([0.55, 0.55, 0.6]) {
@@ -242,44 +310,35 @@ module topBridge(zPlateTop, zInnBearTop) {
 
 // kidneySolid and wedgePrism are in primitives.scad (via use above).
 
-// One port assembly on the BOTTOM plate: a kidney slot through the plate, a duct
-// pocket under it leading radially out, and the push-on hose spout at the rim.
-// Grey = fixed. `mid` = kidney centre angle; spout exits at the same angle.
-module port(mid, zPlateBot) {
-    plateR = rotorOuterR + wall + e;
-    color([0.55, 0.55, 0.6]) {
-        // hose spout at the rim, pointing radially out at the kidney's angle
-        rotate([0, 0, mid])
-        translate([plateR - 2, 0, zPlateBot])
-        rotate([0, 90, 0])
-        difference() {
-            cylinder(d = portID + 2 * portWall, h = portLen, $fn = 48);
-            translate([0, 0, -0.5]) cylinder(d = portID, h = portLen + 1, $fn = 48);
-        }
-        // a thin ring marking the kidney opening on the plate's inner face (visual)
-        translate([0, 0, zPlateBot + plateT/2 - 0.5])
-            kidneySolid(mid, portArc, portRin, portRout, 1.2);
-    }
-}
+// Ports are now axial ducts through the bottom plate — no radial spout needed.
 
-// The kidney cut-outs through the bottom plate (subtracted from the plate).
-module bottomPlatePorts() {
-    kidneySolid(intakeMid, portArc, portRin, portRout, plateT + 1);
-    kidneySolid(outletMid, portArc, portRin, portRout, plateT + 1);
-}
+// (bottomPlatePorts is now inlined into bottomPlate())
 
 module harness() {
-   // rotorPair();
-    zPlate = h / 2 + axialGap + plateT / 2;        // plate centre, beyond rotor end
-    zPlateTop = zPlate;                            // top fixed plate
-    zOutPul   = zPlate + plateT / 2 + outPulleyH / 2 + 1;   // outer pulley above top plate plus some clearance
+    rotorPair();
+    zTop = h / 2 + axialGap + topPlateT / 2;       // top plate centre
+    zBot = h / 2 + axialGap + botPlateT / 2;       // bottom plate centre
+    zPlateTop = zTop;
+    zOutPul   = zTop + topPlateT / 2 + outPulleyH / 2 + 1;
 
-    // --- Grey fixed world: top plate plain; BOTTOM plate has the kidney ports cut.
-    translate([0, 0,  zPlate]) bearingPlate();
-    translate([0, 0, -zPlate])
-        difference() { bearingPlate(); bottomPlatePorts(); }
-    translate([0, 0,  zPlate]) bearingProxy(outB_id, outB_od, outB_w);
-    translate([0, 0, -zPlate]) bearingProxy(outB_id, outB_od, outB_w);
+    // --- Top plate (thin) + outer bearing
+    translate([0, 0,  zTop]) topPlate();
+    translate([0, 0,  zTop]) bearingProxy(outB_id, outB_od, outB_w);
+
+    // --- Bottom plate (thick) — seats both bearings, blind kidney pockets + axial ducts
+    translate([0, 0, -zBot]) bottomPlate();
+
+    // Outer bearing on the bottom plate: sits in its bore on the ROTOR-FACING side.
+    // Bore opens from rotor face (zBotRotorFace = -zBot + botPlateT/2), bearing
+    // centre is inset by outB_w/2 from that face.
+    zBotRotorFace = -zBot + botPlateT / 2;
+    zOutBearBot   = zBotRotorFace - (outB_w + 0.5) / 2;
+    translate([0, 0, zOutBearBot])
+        bearingProxy(outB_id, outB_od, outB_w);
+
+    // Inner bearing proxy in bottom plate (outside face, offset axis)
+    translate([0, e, -zBot - botPlateT/2 + (innB_w + 0.5)/2])
+        bearingProxy(innB_id, innB_od, innB_w);
 
     // --- Orange outer rotor's integral pulley, just above the top plate.
     translate([0, 0, zOutPul]) outerPulley();
@@ -290,16 +349,14 @@ module harness() {
     zInnBearTop = zOutPul + outPulleyH / 2 + beltClear + innB_w / 2;
     zInnPul     = zInnBearTop + innB_w / 2 + innPulleyH / 2;
     shaftTop    = zInnPul + innPulleyH / 2 + 5;
-    shaftBot    = -zPlate - plateT / 2 - 5;
+    shaftBot    = -zBot - botPlateT / 2 - 5;
 
     translate([0, e, 0]) {
-        // inner shaft spans from below the bottom plate up to above the inner pulley
+        // inner shaft spans from below the bottom plate to above the inner pulley
         color("yellow")
             translate([0, 0, (shaftTop + shaftBot) / 2])
                 cylinder(d = innB_id, h = shaftTop - shaftBot, center = true, $fn = 48);
-        // bottom inner bearing stays at the bottom plate (grey = in fixed plate)
-        translate([0, 0, -zPlate]) bearingProxy(innB_id, innB_od, innB_w);
-        // top inner bearing moved up, outboard of the orange pulley
+        // top inner bearing — outboard of the orange pulley
         translate([0, 0, zInnBearTop]) bearingProxy(innB_id, innB_od, innB_w);
         // inner sourced (non-printed) pulley — yellow, beyond the top bearing.
         // Note: it sits offset by e, so it does NOT share an axis with the outer
@@ -313,13 +370,12 @@ module harness() {
     // --- Top bridge that fixes the upper inner bearing to the world.
     topBridge(zPlateTop, zInnBearTop);
 
-    // --- Intake + outlet ports on the bottom plate, at the MEASURED kidney angles.
-    port(intakeMid, -zPlate);   // intake  (opening half, void peaks ~285-300 deg)
-    port(outletMid, -zPlate);   // outlet  (closing half)
+    // Ports are axial ducts — hose fittings attach directly to the outside plate face.
 }
 
 // ---- Output dispatch --------------------------------------------------------
-if      (mode == "plate")   bearingPlate();
-else if (mode == "harness") harness();
-else if (mode == "pair")    rotorPair();
-else                        harness();
+if      (mode == "top_plate")    topPlate();
+else if (mode == "bottom_plate") bottomPlate();
+else if (mode == "harness")      harness();
+else if (mode == "pair")         rotorPair();
+else                             harness();

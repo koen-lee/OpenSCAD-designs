@@ -159,9 +159,13 @@ foreach ($ft in $frames) {
             else                     { "{0}{1}_{2}.png" -f $stem, $tag, $View }
     $png  = Join-Path $outDir $name
 
-    $dargs = @(); foreach ($x in $D) { $dargs += "-D"; $dargs += $x }
-    & $scad -o $png --imgsize="$Size,$Size" --camera=$camera @projArg `
-        -D "`$t=$(n $ft)" @dargs $src 2>&1 | Out-Null
+    $rargs = [System.Collections.Generic.List[string]]::new()
+    $rargs.AddRange([string[]]@("-o", $png, "--imgsize=$Size,$Size", "--camera=$camera"))
+    if ($camDef.ortho) { $rargs.Add("--projection=ortho") }
+    $rargs.AddRange([string[]]@("-D", "`$t=$(n $ft)"))
+    foreach ($x in $D) { $rargs.AddRange([string[]]@("-D", $x)) }
+    $rargs.Add($src)
+    & $scad $rargs.ToArray() 2>&1 | Out-Null
 
     if (Test-Path $png) {
         Write-Host ("  t={0,-6} -> {1}" -f (n $ft), (Resolve-Path $png).Path)
