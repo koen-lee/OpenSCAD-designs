@@ -47,7 +47,8 @@ fn       = 256;   // profile resolution (points around the trochoid)
 
 /* [Bearing harness] */
 axialGap = 0.15;  // mm, target rotor-to-plate clearance (set by shims, not Z)
-plateT   = 6;     // bearing-plate thickness (mm)
+plateT   = 28;    // bearing-plate thickness (mm). Must be ≥ portID so the duct is
+                  // at least 1× diameter long before opening — prevents whistle.
 wall     = 4;     // housing wall around the outer bearing (mm)
 // Inner shaft bearing (default 608: 8 ID / 22 OD / 7 W). Edit to a sourced part.
 innB_id = 8;  innB_od = 22; innB_w = 7;
@@ -65,14 +66,18 @@ screwD      = 3;   // M3 cap screws
 /* [Ports] */
 portID   = 25;   // hose inner Ø to match (mm) — see design_constraints (25 mm tubing)
 portWall = 3;    // port spout wall thickness (mm)
-portLen  = 18;   // how far the spout sticks out radially (mm)
-// Kidney (arc) ports through the BOTTOM plate. Measured from the model: void area
-// peaks near 285 deg (chambers fully OPEN = intake) and is minimum near 90 deg
-// (full mesh = sealing land). So the active arcs live on the 270-side; split at the
-// max (285) and min (90/270) cusps with wide sealing lands (generous-land choice).
-intakeMid  = 300;  // deg, centre of intake kidney (the opening half)
-outletMid  = 240;  // deg, centre of outlet kidney (the closing half)
-portArc    = 70;   // deg, angular width of each kidney (smaller = wider lands)
+portLen  = 30;   // spout duct length (mm); ≥ portID for smooth entry (no whistle)
+// Kidney ports through the BOTTOM plate, flanking the FIXED MESH SEAL at the top
+// (90° = +y = the shaft-offset direction). The mesh seal is the stationary divider
+// between intake and outlet — see gerotor_design.md (Pocket sealing section).
+//   land = 10° total (5° each side of the 90° seal)
+//   each kidney = 100° wide
+//   intake centre = 90 + 5 + 50 = 145°  spans  95° → 195°
+//   outlet centre = 90 - 5 - 50 =  35°  spans -15° → 85°  (= 345° → 85°)
+//   bottom land ≈ 195° → 345° = 150° — generously separates the two far ends
+intakeMid  = 145;  // deg, centre of intake kidney
+outletMid  = 35;   // deg, centre of outlet kidney
+portArc    = 100;  // deg, angular width of each kidney
 // portRout/portRin (kidney slot radii) are derived after `e` — see derived section.
 
 /* [Drive] */
@@ -91,7 +96,7 @@ beltClear   = 3;    // axial gap between outer pulley and inner pulley region (m
 // "pair"    : just the meshing rotor pair (default; fast to animate, top view)
 // "harness" : rotors + bearing plates + bearings + inner shaft (3D check)
 // "plate"   : the reprintable bearing plate alone (for printing/inspection)
-mode = "pair";
+mode = "pair"; // [pair, harness, plate]
 
 /* [Animation] */
 rpm_demo = 20;    // arbitrary turns over the $t cycle, for visual checking
@@ -118,24 +123,7 @@ outB_od     = outB_id + 2 * 6;
 outPulleyR  = rotorOuterR;
 innPulleyR  = outPulleyR * N / (N + 1);
 
-// ---- Trochoid + area --------------------------------------------------------
-// Trochoid point list, faithful to the original rtroch_b:
-//   r2 = r1/(n-1);  a1 = i*360/steps;  a2 = a1 * r1/r2
-function trochoid(n, r1, steps) =
-    let (r2 = r1 / (n - 1))
-    [ for (i = [0 : steps - 1])
-        let (a1 = i * 360 / steps,
-             a2 = a1 * r1 / r2)
-        r1 * [sin(a1), cos(a1)] + r2 * [-sin(a2), cos(a2)]
-    ];
-
-// Shoelace area of a closed point list (mm^2); cross-terms summed via dot with 1s.
-function polyArea(p) =
-    let (cross = [ for (i = [0 : len(p) - 1])
-                     let (j = (i + 1) % len(p))
-                     p[i].x * p[j].y - p[j].x * p[i].y ],
-         ones  = [ for (i = [0 : len(p) - 1]) 1 ])
-    abs(0.5 * (cross * ones));
+use <primitives.scad>
 
 // Displacement estimate (first-order; ignores pin rounding). See gerotor_design.md.
 A_outer = polyArea(trochoid(N + 1, ro, fn));
@@ -252,17 +240,7 @@ module topBridge(zPlateTop, zInnBearTop) {
     }
 }
 
-// Kidney (arc) slot solid: an annular sector between portRin..portRout spanning
-// `arc` degrees centred at `mid`. Used both to CUT the slot through the plate and
-// (shorter) to visualise the gas path. Built as a fan of wedge triangles.
-module kidneySolid(mid, arc, rin, rout, hgt) {
-    steps = max(8, ceil(arc / 5));
-    linear_extrude(hgt, center = true)
-    polygon(concat(
-        [ for (i = [0 : steps]) let (a = mid - arc/2 + arc*i/steps) rout*[cos(a), sin(a)] ],
-        [ for (i = [steps : -1 : 0]) let (a = mid - arc/2 + arc*i/steps) rin*[cos(a), sin(a)] ]
-    ));
-}
+// kidneySolid and wedgePrism are in primitives.scad (via use above).
 
 // One port assembly on the BOTTOM plate: a kidney slot through the plate, a duct
 // pocket under it leading radially out, and the push-on hose spout at the rim.
@@ -340,35 +318,8 @@ module harness() {
     port(outletMid, -zPlate);   // outlet  (closing half)
 }
 
-// ---- Chamber map (2D) -------------------------------------------------------
-// Shows the actual gas pockets = (outer pocket) MINUS (inner lobe), in cyan, with
-// reference rings overlaid so we can see exactly which radial band the ports must
-// reach and how far the bearing ID/OD intrude on it. Pure diagnostic; flat top view.
-module ring(r, col) {
-    color(col) difference() {
-        circle(r = r + 0.4, $fn = 160);
-        circle(r = r - 0.4, $fn = 160);
-    }
-}
-module chamberMap() {
-    aO = -(rpm_demo * 360 * $t) / (N + 1);
-    aI = -(rpm_demo * 360 * $t) / N;
-    color([0.2, 0.8, 0.9])
-    difference() {
-        rotate(aO) offset(r = pinOut)  polygon(trochoid(N + 1, ro, fn));
-        translate([0, e]) rotate(aI) offset(r = -pinIn) polygon(trochoid(N, ri, fn));
-    }
-    ring(portRin,           [1, 0.5, 0]);     // orange: kidney inner edge
-    ring(portRout,          [1, 0.5, 0]);     // orange: kidney outer edge
-    ring(outB_id / 2,       [0.5, 0.5, 0.6]); // grey: outer bearing ID
-    ring(outB_od / 2,       [0.3, 0.3, 0.4]); // dark grey: outer bearing OD
-    ring(e + innB_id/2 + 2, [0.9, 0.1, 0.1]); // red: min ID if only inner SHAFT passes
-    color("black")       circle(r = 0.7, $fn = 16);                 // outer axis
-    color([0.6,0.6,0]) translate([0, e]) circle(r = 0.7, $fn = 16); // inner axis
-}
-
 // ---- Output dispatch --------------------------------------------------------
-if      (mode == "plate")    bearingPlate();
-else if (mode == "harness")  harness();
-else if (mode == "chambers") chamberMap();
-else                         rotorPair();   // "pair" (default)
+if      (mode == "plate")   bearingPlate();
+else if (mode == "harness") harness();
+else if (mode == "pair")    rotorPair();
+else                        harness();
