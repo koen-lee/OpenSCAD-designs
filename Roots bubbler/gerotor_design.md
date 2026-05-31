@@ -127,20 +127,49 @@ Current-CAD note: in [gerotor.scad](gerotor.scad) the profile relationship is se
 generation.** That decoupling is exactly what will bite on reprint and is the first
 real CAD task to fix.
 
-## Large-ID outer bearing — sizing and sourcing (priced)
+## Outer (orange) bearing ID — keep it small by stacking the bearings (no-regret)
 
-The outer rotor rides a large-ID bearing whose bore must clear the inner rotor's
-orbit. The CAD derives it (echoed): required ID = `2*e + inner_bearing_OD + slack`.
+The outer rotor rides a centre bearing whose bore must clear whatever passes through
+its centre. The first cut sized that bore to clear the inner rotor's whole *orbit*
+(`2*e + inner_bearing_OD + slack`) — Ø45 at prototype, ~Ø65 at full scale.
 
-- Prototype (ro=30, e=10): required ID ≈ 44 mm → chosen Ø45 ID / Ø57 OD.
-- **Full scale (ro=60, e=20): required ID ≈ 64 mm → a Ø65 ID thin-section bearing**
-  (e.g. 61813 / 6813, 65/85/10).
+**Better: drop the inner (yellow) rotor bearing down close to its rotor, OUTBOARD of
+the outer (orange) bearing.** Then the only thing crossing the outer bearing's centre
+is the inner *shaft* (offset by `e`), not the inner bearing. The required outer bore
+collapses to `2*(e + shaft_radius + slack)` — roughly Ø32 at prototype instead of Ø45.
+This is a no-regret change on every axis:
 
-**Sourcing check (priced):** Ø65 ID thin-section bearing ≈ **€15/pc, ~1 week
-delivery** from a reputable supplier — not a blocker. (AliExpress lists ~€0.87, not
-trusted for a precision journal that *is* the tip-clearance reference — likely
-pre-rusted / out-of-tolerance. The bearing's runout becomes the rotor's runout, so
-buy the real part.)
+- **Less leakage** — a smaller centre hole in the chamber endplate means less open
+  area bleeding between chambers and to the shaft cavity.
+- **More room for ports** — the kidneys live in the chamber annulus; a smaller outer
+  bearing stops intruding on that band (it previously overlapped the kidneys outright).
+- **Cheaper** — a smaller-ID bearing is a cheaper, more common part at every scale
+  (and avoids the ~€15 Ø65 thin-section the orbit-clearing version needed at full size).
+
+Additionally, **raise the outer bearing axially out of the chamber plane** so only its
+bore (a clearance hole for the shaft) touches the chamber endface; its OD ring no
+longer sits on top of the pumping pockets. (Earlier sourcing note retained for
+reference: a reputable Ø65 thin-section was ~€15/pc, ~1 wk — but with the stacked
+layout we no longer need a bearing that large. Never trust the ~€0.87 AliExpress part
+for a journal that *is* the tip-clearance reference.)
+
+## Pocket sealing and where the kidney ports go
+
+The gerotor seals in two ways. (1) The **three inner-rotor tips** always ride against
+the outer rotor's pocket walls — these are the *moving* seals that divide one chamber
+(cyan pocket) from the next as the rotors turn. (2) At the **fixed mesh point on the
+line through both shaft centres** (the +`e` side, "top"), an inner tip is fully seated
+in an outer pocket: solid-to-solid contact. That fixed seal is the **stationary
+divider between intake and outlet**.
+
+Port placement follows directly: the **two kidney slots flank that top mesh seal**,
+one each side, and **both stop short of it** so neither shorts high-pressure back to
+low-pressure across the seal. As the rotor turns, chambers on the opening side grow
+(drawing in through the **intake** kidney) and on the closing side shrink (expelling
+through the **outlet** kidney); a **second land at the bottom** keeps the two kidneys
+from meeting there. The kidneys sit in the chamber annulus (radially between the inner
+orbit and the pocket outer edge), which is exactly the band freed up by shrinking and
+raising the outer bearing above.
 
 ## Bearing-plate concept (Arrangement 2, baked-in `e`)
 
