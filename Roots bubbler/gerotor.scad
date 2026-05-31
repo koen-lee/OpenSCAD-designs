@@ -86,7 +86,6 @@ portArc    = 90;  // deg, angular width of each kidney
 // innPulleyR is derived to give the correct (N+1):N speed ratio.
 gt2RimH     = 12;   // axial height of the GT2 belt region on the outer rotor (mm)
 innPulleyH  = 10;   // axial height of the inner shaft sourced pulley (mm)
-innPulleyR  = rotorOuterR * N / (N + 1);  // derived pitch radius for correct ratio
 
 /* [Output] */
 // "pair"    : just the meshing rotor pair (default; fast to animate, top view)
@@ -115,6 +114,9 @@ portRin  = ro - e - 2;
 outB_id_req = 2 * (e + innB_id / 2 + 2);
 outB_id     = ceil(outB_id_req / 5) * 5;
 outB_od     = outB_id + 2 * 6;
+
+// Inner shaft pulley pitch radius: (N+1):N ratio with the outer rotor OD.
+innPulleyR  = rotorOuterR * N / (N + 1);
 
 // Pocket depth: bearing width + a little clearance, used to size the kidney recess.
 pocketDepth = outB_w + 2;
@@ -151,14 +153,12 @@ module outerRotor() {
     color("orange")
     rotate([0, 0, -(rpm_demo * 360 * $t) / (N + 1)])
     difference() {
-        union() {
-            cylinder(r = rotorOuterR, center = true, h = hRotor);
-            // GT2 belt rim: raised band at the top, above the top bearing pocket.
-            // Modelled as a smooth cylinder proxy; real GT2 teeth added later.
-            translate([0, 0, hRotor / 2 + gt2RimH / 2])
-                cylinder(r = rotorOuterR, h = gt2RimH, center = true, $fn = 120);
-        }
-        member(N + 1, ro, grow = pinOut, conv = 3);
+        // GT2 belt zone is the band of the rotor OD just below the top bearing pocket.
+        // No extra geometry needed — the belt engages the rotor OD there directly.
+        // Real GT2 tooth profile will be added via use<> when the housing is modelled.
+        cylinder(r = rotorOuterR, center = true, h = hRotor);
+        translate([0,0,-outB_w])
+            member(N + 1, ro, grow = pinOut, conv = 3);
         // Bottom bearing pocket — outer race press-fit, air escapes via trochoid voids.
         translate([0, 0, -(hRotor / 2 - outB_w / 2)])
             cylinder(d = outB_od + 0.2, h = outB_w + 1, center = true, $fn = 96);
@@ -211,10 +211,13 @@ module topPlate() {
     difference() {
         union() {
             cylinder(r = plateR, h = topPlateT, center = true, $fn = 120);
-            // Boss protrudes into rotor space from the rotor-facing face (−topPlateT/2)
+            // Boss protrudes down into rotor space; inner race of top outer bearing slides onto it
             translate([0, 0, -(topPlateT / 2 + bossH / 2)])
                 cylinder(d = outB_id, h = bossH, center = true, $fn = 120);
         }
+        // Top inner bearing bore — blind pocket from outside (top) face, bearing presses in from above
+        translate([0, e, topPlateT / 2 - (innB_w + 0.6) / 2])
+            cylinder(d = innB_od + 0.1, h = innB_w + 0.8, center = true, $fn = 96);
         // Inner shaft clearance through full plate + boss
         translate([0, e, 0])
             cylinder(d = innB_id + 1, h = topPlateT + 2 * bossH + 2, center = true, $fn = 64);
@@ -296,15 +299,33 @@ module bearings() {
     translate([0, e, -(zBot + botPlateT / 2) + innB_w / 2 + 0.5])
         bearingProxy(innB_id, innB_od, innB_w);
 
+    // Top inner bearing — pressed in from outside (top) face of the top plate
+    translate([0, e, zTop + topPlateT / 2 - (innB_w + 0.6) / 2])
+        bearingProxy(innB_id, innB_od, innB_w);
+
     // Inner shaft + sourced pulley above the top plate, on the offset axis
+    zPul = zTop + topPlateT / 2 + innPulleyH / 2 + 2;
     translate([0, e, 0]) {
-        color("yellow") {
+        // Shaft
+        color("yellow")
             translate([0, 0, (shaftTop + shaftBot) / 2])
                 cylinder(d = innB_id, h = shaftTop - shaftBot, center = true, $fn = 48);
-            // Sourced pulley sits above the top plate; ratio (N+1):N with outer rotor
-            translate([0, 0, zTop + topPlateT / 2 + innPulleyH / 2 + 2])
-                rotate([0, 0, -(rpm_demo * 360 * $t) / N])
-                    cylinder(r = innPulleyR, h = innPulleyH, center = true, $fn = 64);
+        // GT2 pulley proxy: belt rim + flanges + shaft bore.
+        // Pitch radius = innPulleyR; rim height = innPulleyH; flanges add 1 mm each side.
+        color("silver")
+        translate([0, 0, zPul])
+        rotate([0, 0, -(rpm_demo * 360 * $t) / N])
+        difference() {
+            union() {
+                // Belt rim
+                cylinder(r = innPulleyR, h = innPulleyH, center = true, $fn = 64);
+                // Top and bottom flanges (prevent belt walking off)
+                for (sz = [-1, 1])
+                    translate([0, 0, sz * (innPulleyH / 2)])
+                        cylinder(r = innPulleyR + 1, h = 1, center = true, $fn = 64);
+            }
+            // Shaft bore
+            cylinder(d = innB_id + 0.2, h = innPulleyH + 4, center = true, $fn = 32);
         }
     }
 }

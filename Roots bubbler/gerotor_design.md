@@ -46,9 +46,11 @@ each rotor pinned to its shaft, timed externally by a **plain toothed belt** at
   XY — the printer's *good* axis), not in a sliding journal.
 - Bearings are sourced precision parts (per the constraints doc).
 - Eccentricity `e` is just the center distance — a number tuned by reprinting one plate.
+- The outer rotor rides on a larger bearing outer race on both sides, bearing ID > 2 * e + inner rotor shaft diameter.
+- The outer rotor has the tooth profile printed in (3mm or 5mm pitch, tbd)
 - Both rotors co-rotate → **plain belt, no reversal gears.** This is the gerotor's
   genuine advantage over Roots and it removes the counter-rotation problem entirely.
-- Cost: two shafts, and the belt must hold the `(N+1):N` phase to ~±1° (same
+- Cost: one shaft, and the belt must hold the `(N+1):N` phase to ~±1° (same
   non-contact budget as Roots).
 
 **Decision: Arrangement 2.** It converts "hard eccentric floating-ring mount" into
