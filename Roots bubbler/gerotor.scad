@@ -147,7 +147,7 @@ echo(outer_bearing_ID_required = outB_id_req,
 // ---- Rotor pair -------------------------------------------------------------
 // member() extrudes a trochoid profile to an explicit height (not the global h).
 module member(n, r1, grow, conv, ht, tw) {
-    linear_extrude(ht, center = true, convexity = conv, twist = tw)
+    linear_extrude(ht, center = true, convexity = conv, twist = tw, slices = 20)
         offset(r = grow, $fn = 32)
             polygon(trochoid(n, r1, fn));
 }
@@ -179,6 +179,9 @@ module outerRotor() {
                 member(N + 1, ro, grow = pinOut, conv = 3, ht = hMesh, tw = tw * N);
             }
         }
+        translate([0,0,-(hMesh + hPort)/2])
+        //Straight end on the bottom for air outlets
+        member(N + 1, ro, grow = pinOut, conv = 3, ht = hPort + 0.1, tw = 0);
         // Bottom bearing pocket — covers the bottom stub end.
         translate([0, 0, -(hRotor / 2 - hPort / 2)])
             cylinder(d = outB_od + 0.2, h = hPort + 1, center = true, $fn = 96);
