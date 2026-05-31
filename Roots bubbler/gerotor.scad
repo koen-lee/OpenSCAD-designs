@@ -129,6 +129,48 @@ innPulleyR  = rotorOuterR * N / (N + 1);
 pocketDepth = outB_w + 2;
 ductR       = (portRout + portRin )/ 2;
 
+// ---- GT2 belt synchronisation -----------------------------------------------
+// Outer rotor carries a printed GT2 5mm ring (additive teeth on OD — FDM friendly).
+// Inner shaft uses a sourced GT2 5mm pulley.
+// Tooth counts must satisfy the (N+1):N speed ratio exactly.
+// GT2 5mm pitch diameter formula (from parametricPulley.scad tooth_spacing):
+//   OD = teeth * 5 / pi - 2 * 0.5715  =  teeth * 5 / pi - 1.143
+// Invert: teeth = (OD + 1.143) * pi / 5
+// For rotorOuterR = 45 mm  →  (90 + 1.143) * pi / 5 ≈ 57.3
+// Largest multiple of (N+1)=4 that is ≤ 57: 56   inner = 56*N/(N+1) = 42
+outerGT2Teeth = 56;                        // printed on outer rotor
+innerGT2Teeth = outerGT2Teeth * N / (N+1); // = 42 — standard sourced pulley
+echo(outer_rotor_pulley_teeth = outerGT2Teeth,
+     inner_shaft_pulley_teeth = innerGT2Teeth);
+
+// GT2 5mm tooth geometry constants (parametricPulley.scad profile 14)
+gt2_pitch             = 5;
+gt2_pitch_line_offset = 0.5715;
+gt2_tooth_width       = 3.952;
+gt2_additional_tooth_width = 0.2; // same default as parametricPulley.scad
+
+// Base circle diameter derived from tooth count (same formula as parametricPulley)
+gt2_OD = 2 * (outerGT2Teeth * gt2_pitch / (PI * 2) - gt2_pitch_line_offset);
+gt2_tooth_width_scale = (gt2_tooth_width + gt2_additional_tooth_width) / gt2_tooth_width;
+
+// GT2 toothed ring, centred at origin, axis along Z.
+// Teeth are additive bumps on top of the base cylinder (rotorOuterR).
+// GT2_5mm() from parametricPulley.scad uses toothed_part_length dynamically;
+// set via let(), shift -h_ring/2 in Z to centre the extrusion.
+// The polygon Y=0 line sits at the pitch circle; rotate each tooth so it points outward.
+module gt2Ring(h_ring) {
+    let(toothed_part_length = h_ring)
+    union() {
+        cylinder(r = gt2_OD/2, h = h_ring, center = true, $fn = outerGT2Teeth * 4);
+        for (i = [1 : outerGT2Teeth])
+            rotate([0, 0, i * (360 / outerGT2Teeth)])
+                translate([gt2_OD/2, 0, -h_ring/2])
+                    rotate([0, 0, 90])
+                        scale([gt2_tooth_width_scale, 1, 1])
+                            GT2_5mm();
+    }
+}
+
 use <primitives.scad>
 
 // Displacement estimate (first-order; ignores pin rounding). See gerotor_design.md.
@@ -168,20 +210,23 @@ module outerRotor() {
     rotate([0, 0, -(rpm_demo * 360 * $t) / (N + 1)])
     difference() {
         union() {
-            // Straight porting stubs at each end: plain cylinder, trochoid void open.
-            // Air flows axially through the voids to the kidney ports.
+            // Top is closed - no leakage to outside there.
+            // Bottom end has porting holes cut out below (not twisted). 
             for (sz = [-1, 1])
                 translate([0, 0, sz * (hMesh / 2 + hPort / 2)])
                     cylinder(r = rotorOuterR, h = hPort, center = true, $fn = 120);
-            // Twisted meshing section.
-            difference() {
-                cylinder(r = rotorOuterR, h = hMesh, center = true, $fn = 120);
-                member(N + 1, ro, grow = pinOut, conv = 3, ht = hMesh, tw = tw * N);
-            }
-        }
+            cylinder(r = rotorOuterR, h = hMesh, center = true, $fn = 120);
+            // GT2 synchronisation ring on the top stub — keeps rotors timed without contact.
+            translate([0, 0, (hMesh / 2 + hPort / 2)])
+                gt2Ring(gt2RimH);
+         }
+        // Twisted meshing section.
+        member(N + 1, ro, grow = pinOut, conv = 3, ht = hMesh, tw = tw * N);
+       
+        // Straight porting stubs at bottom end: plain cylinder, trochoid void open.
+        // Air flows axially through the voids to the kidney ports.
         translate([0,0,-(hMesh + hPort)/2])
-        //Straight end on the bottom for air outlets
-        member(N + 1, ro, grow = pinOut, conv = 3, ht = hPort + 0.1, tw = 0);
+            member(N + 1, ro, grow = pinOut, conv = 3, ht = hPort + 0.1, tw = 0);
         // Bottom bearing pocket — covers the bottom stub end.
         translate([0, 0, -(hRotor / 2 - hPort / 2)])
             cylinder(d = outB_od + 0.2, h = hPort + 1, center = true, $fn = 96);
@@ -356,7 +401,6 @@ module harness() {
 
     translate([0, 0, -zBot]) bottomPlate();
     translate([0, 0,  zTop]) topPlate();
-    rotorPair();
     bearings();
 }
 
