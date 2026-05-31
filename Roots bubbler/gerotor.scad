@@ -88,11 +88,18 @@ gt2RimH     = 12;   // axial height of the GT2 belt region on the outer rotor (m
 innPulleyH  = 10;   // axial height of the inner shaft sourced pulley (mm)
 
 /* [Output] */
-// "pair"    : just the meshing rotor pair (default; fast to animate, top view)
+// "pair"    : meshing rotor pair + bearings
 // "harness" : rotors + bearing plates + bearings + inner shaft (3D check)
+// "cross"   : horizontal cross-sections at several Z heights (frozen at t=0.2)
 // "plate"   : the reprintable bearing plate alone (for printing/inspection)
-mode = "pair"; // [pair, harness, bottom_plate, top_plate, all]
-// "pair" now includes bearings() so shaft/bearing positions can be verified against the rotors.
+mode = "cross"; // [pair, harness, cross, bottom_plate, top_plate]
+
+/* [Cross-section] */
+nSlices    = 5;     // number of cross-section slices
+sliceT     = 1.0;   // thickness of each slice (mm)
+// Rotation phase for cross-section mode (0..1). Pass via -D "tPhase=0.15".
+// ($t cannot be set via -D; this regular variable substitutes for it.)
+tPhase     = 0.2;
 
 /* [Animation] */
 rpm_demo = 1;    // arbitrary turns over the $t cycle, for visual checking
@@ -138,39 +145,51 @@ echo(outer_bearing_ID_required = outB_id_req,
      outer_bearing_ID_chosen = outB_id, outer_bearing_OD = outB_od);
 
 // ---- Rotor pair -------------------------------------------------------------
-module member(n, r1, grow, conv) {
-    linear_extrude(h, center = true, convexity = conv, twist = twist)
+// member() extrudes a trochoid profile to an explicit height (not the global h).
+module member(n, r1, grow, conv, ht, tw) {
+    linear_extrude(ht, center = true, convexity = conv, twist = tw)
         offset(r = grow, $fn = 32)
             polygon(trochoid(n, r1, fn));
 }
-// Outer rotor is full height h. Both ends carry a bearing pocket (outer race press-fit).
-// The GT2 belt rim sits above the top bearing pocket as an integral raised band.
-// Inner rotor is shortened symmetrically so it clears both bearing pockets.
+
+// hRotor    : full outer rotor cylinder height (bearing pockets at each end)
+// hPort     : short straight stub at each end — no profile cut, air flows axially
+//             through the trochoid voids here to reach the kidney ports
+// hMesh     : twisted meshing zone between the two stubs; same height for both rotors
+// hInnerRotor: inner rotor matches hMesh minus axialGap clearance at each end
 hRotor      = h;
-hInnerRotor = h - 2 * outB_w - 2 * axialGap;  // clear bearing pocket at each end
+hPort       = outB_w;
+hMesh       = hRotor - 2 * hPort;
+hInnerRotor = hMesh - 2 * axialGap;
+tw = 15;   // total helical twist (deg) over hMesh
 
 module outerRotor() {
     color("orange")
     rotate([0, 0, -(rpm_demo * 360 * $t) / (N + 1)])
     difference() {
-        // GT2 belt zone is the band of the rotor OD just below the top bearing pocket.
-        // No extra geometry needed — the belt engages the rotor OD there directly.
-        // Real GT2 tooth profile will be added via use<> when the housing is modelled.
-        cylinder(r = rotorOuterR, center = true, h = hRotor);
-        translate([0,0,-outB_w])
-            member(N + 1, ro, grow = pinOut, conv = 3);
-        // Bottom bearing pocket — outer race press-fit, air escapes via trochoid voids.
-        translate([0, 0, -(hRotor / 2 - outB_w / 2)])
-            cylinder(d = outB_od + 0.2, h = outB_w + 1, center = true, $fn = 96);
-        // Top bearing pocket — symmetric with bottom.
-        translate([0, 0,  (hRotor / 2 - outB_w / 2)])
-            cylinder(d = outB_od + 0.2, h = outB_w + 1, center = true, $fn = 96);
-        // Labyrinth seal grooves on the OD — circumferential, spaced along the rotor height.
-        // Housing bore gets matching ridges (same depth/width) for a non-contact seal.
+        union() {
+            // Straight porting stubs at each end: plain cylinder, trochoid void open.
+            // Air flows axially through the voids to the kidney ports.
+            for (sz = [-1, 1])
+                translate([0, 0, sz * (hMesh / 2 + hPort / 2)])
+                    cylinder(r = rotorOuterR, h = hPort, center = true, $fn = 120);
+            // Twisted meshing section.
+            difference() {
+                cylinder(r = rotorOuterR, h = hMesh, center = true, $fn = 120);
+                member(N + 1, ro, grow = pinOut, conv = 3, ht = hMesh, tw = tw * N);
+            }
+        }
+        // Bottom bearing pocket — covers the bottom stub end.
+        translate([0, 0, -(hRotor / 2 - hPort / 2)])
+            cylinder(d = outB_od + 0.2, h = hPort + 1, center = true, $fn = 96);
+        // Top bearing pocket — symmetric.
+        translate([0, 0,  (hRotor / 2 - hPort / 2)])
+            cylinder(d = outB_od + 0.2, h = hPort + 1, center = true, $fn = 96);
+        // Labyrinth seal grooves on the meshing zone OD only.
         if (labN > 0) {
-            labSpacing = (hRotor - 2 * outB_w) / (labN + 1);
+            labSpacing = hMesh / (labN + 1);
             for (i = [1 : labN])
-                translate([0, 0, -(hRotor / 2 - outB_w) + i * labSpacing])
+                translate([0, 0, -hMesh / 2 + i * labSpacing])
                     difference() {
                         cylinder(r = rotorOuterR + 0.1, h = labWidth, center = true, $fn = 120);
                         cylinder(r = rotorOuterR - labDepth, h = labWidth + 1, center = true, $fn = 120);
@@ -181,11 +200,9 @@ module outerRotor() {
 
 module innerRotor() {
     color("yellow")
-    rotate([0, 0, -(rpm_demo * 360 * $t) / N])
     translate([0, e, 0])
-    linear_extrude(hInnerRotor, center = true, convexity = 4)
-        offset(r = pinIn, $fn = 32)
-            polygon(trochoid(N, ri, fn));
+    rotate([0, 0, -(rpm_demo * 360 * $t) / N])
+    member(N, ri, grow = pinIn, conv = 4, ht = hInnerRotor, tw = tw * (N + 1));
 }
 module rotorPair() { outerRotor(); innerRotor(); }
 module pair()      { rotorPair(); bearings(); }
@@ -340,10 +357,31 @@ module harness() {
     bearings();
 }
 
+// ---- Cross-section view -----------------------------------------------------
+// Slices the rotor pair at evenly-spaced Z heights across the meshing zone,
+// frozen at $t = 0.2. All slices are projected to Z=0 and spread along X so a
+// single top-down view shows the full twist progression left to right.
+module crossSections() {
+    spacing = hMesh / (nSlices - 1);
+    spread  = rotorOuterR * 2 + 8;
+    centerX = -(nSlices - 1) * spread / 2;
+    for (i = [0 : nSlices - 1]) {
+        zCut = -hMesh / 2 + i * spacing;
+        translate([centerX + i * spread, 0, 0])
+        translate([0, 0, -zCut])   // project slice to Z=0
+            intersection() {
+                translate([0, 0, zCut])
+                    cube([rotorOuterR * 4, rotorOuterR * 4, sliceT], center = true);
+                let($t = tPhase) rotorPair();
+            }
+    }
+}
+
 // ---- Output dispatch --------------------------------------------------------
 if      (mode == "top_plate")    topPlate();
 else if (mode == "bottom_plate") bottomPlate();
 else if (mode == "harness")      harness();
+else if (mode == "cross")        crossSections();
 else if (mode == "pair")         pair();
 else {
     harness();
