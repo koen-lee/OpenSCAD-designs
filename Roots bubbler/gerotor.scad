@@ -54,6 +54,27 @@ innB_id = 8;  innB_od = 22; innB_w = 7;
 // Outer LARGE-ID bearing width; ID/OD are derived below from the orbit envelope.
 outB_w  = 7;
 
+/* [Top bearing bridge] */
+// The top inner bearing sits above the orange pulley and must be held by the FIXED
+// world. A bridge (yoke) rises from the top plate on posts that clear the pulley OD,
+// spans over it, and caps the inner bearing's outer race — screwed down.
+bridgePostD = 8;   // diameter of the support posts (mm)
+bridgeCapT  = 6;   // thickness of the bridge cap that holds the bearing (mm)
+screwD      = 3;   // M3 cap screws
+
+/* [Ports] */
+portID   = 25;   // hose inner Ø to match (mm) — see design_constraints (25 mm tubing)
+portWall = 3;    // port spout wall thickness (mm)
+portLen  = 18;   // how far the spout sticks out radially (mm)
+// Kidney (arc) ports through the BOTTOM plate. Measured from the model: void area
+// peaks near 285 deg (chambers fully OPEN = intake) and is minimum near 90 deg
+// (full mesh = sealing land). So the active arcs live on the 270-side; split at the
+// max (285) and min (90/270) cusps with wide sealing lands (generous-land choice).
+intakeMid  = 300;  // deg, centre of intake kidney (the opening half)
+outletMid  = 240;  // deg, centre of outlet kidney (the closing half)
+portArc    = 70;   // deg, angular width of each kidney (smaller = wider lands)
+// portRout/portRin (kidney slot radii) are derived after `e` — see derived section.
+
 /* [Drive] */
 // Integral printed pulley on the OUTER rotor (orange, one printed part with the
 // rotor). The belt drives this directly; large diameter = forgiving printed teeth.
@@ -79,6 +100,10 @@ rpm_demo = 20;    // arbitrary turns over the $t cycle, for visual checking
 e   = ro / N;          // eccentricity == shared generating radius r2
 ri  = ro - e;          // inner member base radius
 rotorOuterR = ro + e + 5;   // outer rotor OD envelope (= housing cylinder radius)
+
+// Kidney slot radii (need e): just inside the outer pockets, clearing the inner orbit.
+portRout = ro - 1;
+portRin  = ro - e - 2;
 
 // Large-ID outer bearing derived from the orbit envelope so the inner rotor and
 // its shaft clear the bearing centre: clear bore = inner orbit (2*e) + inner
@@ -142,15 +167,19 @@ module outerRotor() {
 
 // Integral printed pulley on the outer rotor: a rim concentric with the outer
 // rotor axis (origin), sitting just above the top bearing plate so the belt clears
-// the housing. Modeled as a smooth rim (teeth omitted); it is part of the orange
+// the housing. Modeled as a smooth rim (teeth omitted); it is connected to the orange
 // printed rotor. The bore lets the inner shaft + its outboard bearing pass through.
 module outerPulley() {
     color("orange")
     rotate([0, 0, -(rpm_demo * 360 * $t) / (N + 1)])
     difference() {
-        cylinder(r = outPulleyR, h = outPulleyH, center = true, $fn = 120);
-        // central bore clears the offset inner shaft's full orbit + its bearing.
-        cylinder(d = 2 * e + innB_od + 3, h = outPulleyH + 1, center = true, $fn = 96);
+        union() {
+            cylinder(r = outPulleyR, h = outPulleyH, center = true, $fn = 120);
+            translate([0,0,-outPulleyH])
+            cylinder(d = outB_id, h = outPulleyH, center = true, $fn = 120);
+        }
+        // central bore clears the offset inner shaft's full orbit. The bearing is above, so it doesn't conflict.
+        cylinder(d = 2 * e + innB_id + 3, h = 3*outPulleyH + 1, center = true, $fn = 96);
     }
 }
 module innerRotor() {
@@ -186,15 +215,91 @@ module bearingPlate() {
     }
 }
 
+// Bridge (yoke) that holds the top inner bearing from the FIXED world. Two posts
+// rise from the top plate, just outside the orange pulley OD, and carry a cap that
+// captures the top inner bearing's outer race over the offset axis. Screws shown as
+// recessed holes in the cap. Grey = fixed.
+module topBridge(zPlateTop, zInnBearTop) {
+    // Posts sit on the offset axis line (y = e), placed left/right in x just outside
+    // the orange pulley OD. The cap is a flat bar between them, centred over the top
+    // inner bearing at (0, e), with a pocket that captures the bearing's outer race.
+    postX  = outPulleyR + bridgePostD / 2 + 2;       // x of each post (clears pulley)
+    postZ0 = zPlateTop + plateT / 2;                 // post base = top face of plate
+    capZ   = zInnBearTop;                            // cap centred on the top bearing
+    postH  = capZ - postZ0;
+    color([0.55, 0.55, 0.6]) {
+        // two support posts, from the top plate up to the cap, flanking the bearing
+        for (sx = [-1, 1])
+            translate([sx * postX, e, postZ0 + postH / 2])
+                cylinder(d = bridgePostD, h = postH, center = true, $fn = 32);
+
+        // cap bar over the bearing, spanning between the two posts
+        translate([0, e, capZ])
+        difference() {
+            hull() for (sx = [-1, 1])
+                translate([sx * postX, 0, 0])
+                    cylinder(d = bridgePostD + 4, h = bridgeCapT, center = true, $fn = 32);
+            // pocket seating the bearing outer race (blind, opens downward)
+            translate([0, 0, -bridgeCapT / 2 + 0.5])
+                cylinder(d = innB_od + 0.3, h = bridgeCapT, center = true, $fn = 64);
+            // shaft clearance up to the pulley
+            cylinder(d = innB_id + 4, h = bridgeCapT + 2, center = true, $fn = 32);
+            // M3 screw holes through the cap into each post
+            for (sx = [-1, 1])
+                translate([sx * postX, 0, 0])
+                    cylinder(d = screwD, h = bridgeCapT + 2, center = true, $fn = 24);
+        }
+    }
+}
+
+// Kidney (arc) slot solid: an annular sector between portRin..portRout spanning
+// `arc` degrees centred at `mid`. Used both to CUT the slot through the plate and
+// (shorter) to visualise the gas path. Built as a fan of wedge triangles.
+module kidneySolid(mid, arc, rin, rout, hgt) {
+    steps = max(8, ceil(arc / 5));
+    linear_extrude(hgt, center = true)
+    polygon(concat(
+        [ for (i = [0 : steps]) let (a = mid - arc/2 + arc*i/steps) rout*[cos(a), sin(a)] ],
+        [ for (i = [steps : -1 : 0]) let (a = mid - arc/2 + arc*i/steps) rin*[cos(a), sin(a)] ]
+    ));
+}
+
+// One port assembly on the BOTTOM plate: a kidney slot through the plate, a duct
+// pocket under it leading radially out, and the push-on hose spout at the rim.
+// Grey = fixed. `mid` = kidney centre angle; spout exits at the same angle.
+module port(mid, zPlateBot) {
+    plateR = rotorOuterR + wall + e;
+    color([0.55, 0.55, 0.6]) {
+        // hose spout at the rim, pointing radially out at the kidney's angle
+        rotate([0, 0, mid])
+        translate([plateR - 2, 0, zPlateBot])
+        rotate([0, 90, 0])
+        difference() {
+            cylinder(d = portID + 2 * portWall, h = portLen, $fn = 48);
+            translate([0, 0, -0.5]) cylinder(d = portID, h = portLen + 1, $fn = 48);
+        }
+        // a thin ring marking the kidney opening on the plate's inner face (visual)
+        translate([0, 0, zPlateBot + plateT/2 - 0.5])
+            kidneySolid(mid, portArc, portRin, portRout, 1.2);
+    }
+}
+
+// The kidney cut-outs through the bottom plate (subtracted from the plate).
+module bottomPlatePorts() {
+    kidneySolid(intakeMid, portArc, portRin, portRout, plateT + 1);
+    kidneySolid(outletMid, portArc, portRin, portRout, plateT + 1);
+}
+
 module harness() {
-    rotorPair();
+   // rotorPair();
     zPlate = h / 2 + axialGap + plateT / 2;        // plate centre, beyond rotor end
     zPlateTop = zPlate;                            // top fixed plate
-    zOutPul   = zPlate + plateT / 2 + outPulleyH / 2;   // outer pulley above top plate
+    zOutPul   = zPlate + plateT / 2 + outPulleyH / 2 + 1;   // outer pulley above top plate plus some clearance
 
-    // --- Grey fixed world: both bearing plates + the two outer large-ID bearings.
+    // --- Grey fixed world: top plate plain; BOTTOM plate has the kidney ports cut.
     translate([0, 0,  zPlate]) bearingPlate();
-    translate([0, 0, -zPlate]) bearingPlate();
+    translate([0, 0, -zPlate])
+        difference() { bearingPlate(); bottomPlatePorts(); }
     translate([0, 0,  zPlate]) bearingProxy(outB_id, outB_od, outB_w);
     translate([0, 0, -zPlate]) bearingProxy(outB_id, outB_od, outB_w);
 
@@ -226,9 +331,44 @@ module harness() {
             rotate([0, 0, -(rpm_demo * 360 * $t) / N])
             cylinder(r = innPulleyR, h = innPulleyH, center = true, $fn = 64);
     }
+
+    // --- Top bridge that fixes the upper inner bearing to the world.
+    topBridge(zPlateTop, zInnBearTop);
+
+    // --- Intake + outlet ports on the bottom plate, at the MEASURED kidney angles.
+    port(intakeMid, -zPlate);   // intake  (opening half, void peaks ~285-300 deg)
+    port(outletMid, -zPlate);   // outlet  (closing half)
+}
+
+// ---- Chamber map (2D) -------------------------------------------------------
+// Shows the actual gas pockets = (outer pocket) MINUS (inner lobe), in cyan, with
+// reference rings overlaid so we can see exactly which radial band the ports must
+// reach and how far the bearing ID/OD intrude on it. Pure diagnostic; flat top view.
+module ring(r, col) {
+    color(col) difference() {
+        circle(r = r + 0.4, $fn = 160);
+        circle(r = r - 0.4, $fn = 160);
+    }
+}
+module chamberMap() {
+    aO = -(rpm_demo * 360 * $t) / (N + 1);
+    aI = -(rpm_demo * 360 * $t) / N;
+    color([0.2, 0.8, 0.9])
+    difference() {
+        rotate(aO) offset(r = pinOut)  polygon(trochoid(N + 1, ro, fn));
+        translate([0, e]) rotate(aI) offset(r = -pinIn) polygon(trochoid(N, ri, fn));
+    }
+    ring(portRin,           [1, 0.5, 0]);     // orange: kidney inner edge
+    ring(portRout,          [1, 0.5, 0]);     // orange: kidney outer edge
+    ring(outB_id / 2,       [0.5, 0.5, 0.6]); // grey: outer bearing ID
+    ring(outB_od / 2,       [0.3, 0.3, 0.4]); // dark grey: outer bearing OD
+    ring(e + innB_id/2 + 2, [0.9, 0.1, 0.1]); // red: min ID if only inner SHAFT passes
+    color("black")       circle(r = 0.7, $fn = 16);                 // outer axis
+    color([0.6,0.6,0]) translate([0, e]) circle(r = 0.7, $fn = 16); // inner axis
 }
 
 // ---- Output dispatch --------------------------------------------------------
-if      (mode == "plate")   bearingPlate();
-else if (mode == "harness") harness();
-else                        rotorPair();   // "pair" (default)
+if      (mode == "plate")    bearingPlate();
+else if (mode == "harness")  harness();
+else if (mode == "chambers") chamberMap();
+else                         rotorPair();   // "pair" (default)
