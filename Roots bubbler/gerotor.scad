@@ -149,9 +149,13 @@ module member(n, r1, grow, conv) {
         offset(r = grow, $fn = 32)
             polygon(trochoid(n, r1, fn));
 }
-// Rotor height is shortened by pocketDepth at each end so the outer bearing stub
-// (which protrudes into the rotor space from the bottom plate) has visible clearance.
-hRotor = h - 2 * pocketDepth;
+// Outer rotor height: full h, but the bottom is recessed by pocketDepth so the
+// bearing boss fits inside. Inner rotor is shorter: cleared away at the bottom by
+// outB_w (boss height) + axialGap so it never touches the bearing.
+hRotor     = h;                      // outer rotor full height; boss pocket cut below
+hInnerRotor = h - outB_w - axialGap; // inner rotor shortened at bottom only
+// Z offset to keep inner rotor centred in the working volume (shift up by half the shortening)
+zInnerRotorOff = (outB_w + axialGap) / 2;
 
 module outerRotor() {
     color("orange")
@@ -159,6 +163,12 @@ module outerRotor() {
     difference() {
         cylinder(r = rotorOuterR, center = true, h = hRotor);
         member(N + 1, ro, grow = pinOut, conv = 3);
+        // Bearing seat: outer rotor grips the outer race of the bottom bearing.
+        // Cut a blind pocket from the bottom face so the bearing (OD = outB_od,
+        // width = outB_w) press-fits into the rotor. Air escapes through the
+        // trochoid voids outside the bearing OD.
+        translate([0, 0, -(hRotor / 2 - outB_w / 2)])
+            cylinder(d = outB_od + 0.2, h = outB_w + 1, center = true, $fn = 96);
     }
 }
 
@@ -181,9 +191,9 @@ module outerPulley() {
 }
 module innerRotor() {
     color("yellow")
-    translate([0, e, 0])
+    translate([0, e, zInnerRotorOff])
     rotate([0, 0, -(rpm_demo * 360 * $t) / N])
-    linear_extrude(hRotor, center = true, convexity = 4)
+    linear_extrude(hInnerRotor, center = true, convexity = 4)
         offset(r = pinIn, $fn = 32)
             polygon(trochoid(N, ri, fn));
 }
@@ -225,13 +235,10 @@ module topPlate() {
 
 module bottomPlate() {
     plateR  = rotorOuterR + wall + e;
-    // The outer bearing is gripped by its ID (inner race) — the plate provides a
-    // cylindrical BOSS that the bearing slides onto. Boss OD = outB_id (press fit),
-    // height = outB_w, protruding from the rotor-facing face into the rotor space.
-    // The kidney arcs are cut into the plate body at the same axial band as the boss
-    // so gas can flow from the chambers into the kidney recess and out via the ducts.
-    // The boss protrudes above the plate face by outB_w; the kidney recess depth
-    // in the plate matches pocketDepth so the floor stays solid on the outside.
+    // The plate provides a cylindrical BOSS (OD = outB_id) that the bearing inner
+    // race slides onto (clearance/light press). The outer race is gripped by the
+    // matching pocket in the outer rotor, so the rotor rides this bearing.
+    // Air bypasses the bearing seat through the trochoid voids outside outB_od.
     bossH   = outB_w;         // boss height = bearing width 
     // Kidney recess: opens from the rotor face into the plate body by pocketDepth.
     recessH = pocketDepth + 2;  // +2 for cutter overshoot
@@ -322,8 +329,9 @@ module bearings() {
     translate([0, 0, zTop])
         bearingProxy(outB_id, outB_od, outB_w);
 
-    // Bottom outer bearing — on the boss protruding from the rotor-facing plate face
-    translate([0, 0, 0.1 + -zBot + botPlateT / 2 + outB_w / 2])
+    // Bottom outer bearing — press-fit into the outer rotor's bottom pocket;
+    // inner race rests on the plate boss, outer race gripped by the rotor.
+    translate([0, 0, -(hRotor / 2 - outB_w / 2)])
         bearingProxy(outB_id, outB_od, outB_w);
 
     // Bottom inner bearing — recessed into the outside face of the bottom plate
