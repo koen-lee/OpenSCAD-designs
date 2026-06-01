@@ -63,6 +63,15 @@ module gt2_5mm_tooth(ht) {
                  [1.798064,0.03212],[1.975908,0],[1.975908,-0.75]]);
 }
 
+// Low-poly preview stand-in: 5-point trapezoid that approximates the GT2 5mm envelope.
+// Used under $preview to keep interactive frame rates acceptable.
+module gt2_5mm_tooth_preview(ht) {
+    linear_extrude(height = ht + 2, center = true)
+        polygon([[-1.976, -0.75], [-1.976, 0],
+                 [0, 1.9685],
+                 [ 1.976, 0], [ 1.976, -0.75]]);
+}
+
 // ---- Kidney solid -----------------------------------------------------------
 // An annular sector between radii `rin`..`rout`, spanning `arc` degrees centred
 // at `mid`, extruded to height `hgt` (centred on z=0).
