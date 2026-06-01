@@ -33,7 +33,7 @@ N    = 3;
 ro   = 30;     // mm
 // Tip-rounding / pin radius (offset applied to the raw trochoid).
 pinOut = 1.5;  // mm, outer pocket rounding
-pinIn  = 1.0;  // mm, inner lobe rounding
+pinIn  = 1.2;  // mm, inner lobe rounding
 
 /* [Build] */
 h        = 100;   // rotor height (mm)
@@ -181,10 +181,21 @@ echo(outer_bearing_ID_required = outB_id_req,
 
 // ---- Rotor pair -------------------------------------------------------------
 // member() extrudes a trochoid profile to an explicit height (not the global h).
-module member(n, r1, grow, conv, ht, tw) {
+module member(n, r1, grow, conv, ht, tw, seal = 0) {
     linear_extrude(ht, center = true, convexity = conv, twist = tw, slices = 20)
-        offset(r = grow, $fn = 32)
-            polygon(trochoid(n, r1, fn));
+        difference() {
+            offset(r = grow, $fn = 32)
+                polygon(trochoid(n, r1, fn));
+            if( seal > 0 ) {
+                // one cutter per lobe tip
+                // "labyrith seal" on the tip, can be filled when needed with hot glue or 3d pen for experimentation
+                for (i = [0 : N-1]) {
+                    rotate([0, 0,  i * 360/N])
+                        translate([0, ri + pinIn + e - 0.2])  // approximate tip location
+                            circle(d = seal, $fn = 16);
+                }
+            }
+        }
 }
 
 // hRotor    : full outer rotor cylinder height (bearing pockets at each end)
@@ -244,10 +255,13 @@ module outerRotor() {
 }
 
 module innerRotor() {
-    color("yellow")
+    color("yellow") 
     translate([0, e, 0])
     rotate([0, 0, -(rpm_demo * 360 * $t) / N])
-    member(N, ri, grow = pinIn, conv = 4, ht = hInnerRotor, tw = tw * (N + 1));
+    difference() {
+        member(N, ri, grow = pinIn, conv = 4, ht = hInnerRotor, tw = tw * (N + 1), seal = 1);
+        cylinder(d = innB_id+0.1, h = hInnerRotor + 1, center = true, $fn=180);
+    }
 }
 module rotorPair() { outerRotor(); innerRotor(); }
 module pair()      { rotorPair(); bearings(); }
