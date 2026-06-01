@@ -144,31 +144,23 @@ echo(outer_rotor_pulley_teeth = outerGT2Teeth,
      inner_shaft_pulley_teeth = innerGT2Teeth);
 
 // GT2 5mm tooth geometry constants (parametricPulley.scad profile 14)
-gt2_pitch             = 5;
-gt2_pitch_line_offset = 0.5715;
 gt2_tooth_width       = 3.952;
 gt2_additional_tooth_width = 0.2; // same default as parametricPulley.scad
 
-// Base circle diameter derived from tooth count (same formula as parametricPulley)
-gt2_OD = 2 * (outerGT2Teeth * gt2_pitch / (PI * 2) - gt2_pitch_line_offset);
+// The toothed cylinder OD is rotorOuterR — the ring is flush with the rotor body,
+// teeth cut inward exactly as pulley() does. tooth_distance_from_centre from pulley().
 gt2_tooth_width_scale = (gt2_tooth_width + gt2_additional_tooth_width) / gt2_tooth_width;
+gt2_tooth_r = sqrt(pow(rotorOuterR, 2) - pow((gt2_tooth_width + gt2_additional_tooth_width)/2, 2));
 
-// GT2 toothed ring, centred at origin, axis along Z.
-// Teeth are additive bumps on top of the base cylinder (rotorOuterR).
-// GT2_5mm() from parametricPulley.scad uses toothed_part_length dynamically;
-// set via let(), shift -h_ring/2 in Z to centre the extrusion.
-// The polygon Y=0 line sits at the pitch circle; rotate each tooth so it points outward.
+// GT2 tooth cutters — the set of tooth-shaped solids to subtract from the rotor OD.
+// Mirrors the cutter loop in pulley(): each tooth placed at -gt2_tooth_r in Y so
+// the tooth tip points toward the cylinder centre (inward = correct valley shape).
 module gt2Ring(h_ring) {
-    let(toothed_part_length = h_ring)
-    union() {
-        cylinder(r = gt2_OD/2, h = h_ring, center = true, $fn = outerGT2Teeth * 4);
-        for (i = [1 : outerGT2Teeth])
-            rotate([0, 0, i * (360 / outerGT2Teeth)])
-                translate([gt2_OD/2, 0, -h_ring/2])
-                    rotate([0, 0, 90])
-                        scale([gt2_tooth_width_scale, 1, 1])
-                            GT2_5mm();
-    }
+    for (i = [1 : outerGT2Teeth])
+        rotate([0, 0, i * (360 / outerGT2Teeth)])
+            translate([0, -gt2_tooth_r, -h_ring/2 - 1])
+                scale([gt2_tooth_width_scale, 1, 1])
+                    gt2_5mm_tooth(h_ring);
 }
 
 use <primitives.scad>
@@ -211,14 +203,11 @@ module outerRotor() {
     difference() {
         union() {
             // Top is closed - no leakage to outside there.
-            // Bottom end has porting holes cut out below (not twisted). 
+            // Bottom end has porting holes cut out below (not twisted).
             for (sz = [-1, 1])
                 translate([0, 0, sz * (hMesh / 2 + hPort / 2)])
                     cylinder(r = rotorOuterR, h = hPort, center = true, $fn = 120);
             cylinder(r = rotorOuterR, h = hMesh, center = true, $fn = 120);
-            // GT2 synchronisation ring on the top stub — keeps rotors timed without contact.
-            translate([0, 0, (hMesh / 2 + hPort / 2)])
-                gt2Ring(gt2RimH);
          }
         // Twisted meshing section.
         member(N + 1, ro, grow = pinOut, conv = 3, ht = hMesh, tw = tw * N);
@@ -233,6 +222,9 @@ module outerRotor() {
         // Top bearing pocket — symmetric.
         translate([0, 0,  (hRotor / 2 - hPort / 2)])
             cylinder(d = outB_od + 0.2, h = hPort + 1, center = true, $fn = 96);
+        // GT2 tooth gaps — cut into the top stub surface.
+        translate([0, 0, (hMesh / 2 + hPort / 2)])
+            gt2Ring(gt2RimH);
         // Labyrinth seal grooves on the meshing zone OD only.
         if (labN > 0) {
             labSpacing = hMesh / (labN + 1);
