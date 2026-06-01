@@ -161,7 +161,35 @@ module gt2Ring(h_ring) {
         rotate([0, 0, i * (360 / outerGT2Teeth)])
             translate([0, -gt2_tooth_r, -h_ring/2 - 1])
                 scale([gt2_tooth_width_scale, 1, 1])
-                    gt2_5mm_tooth(h_ring);
+                    if ($preview) gt2_5mm_tooth_preview(h_ring);
+                    else          gt2_5mm_tooth(h_ring);
+}
+
+// Inner shaft GT2 5mm pulley — sourced pulley proxy with correct tooth profile.
+// tooth_r and width_scale use innPulleyR (pitch radius) and innerGT2Teeth.
+inn_gt2_tooth_r     = sqrt(pow(innPulleyR, 2) - pow((gt2_tooth_width + gt2_additional_tooth_width)/2, 2));
+module innPulley(h_pul) {
+    flange_h = 1.5;
+    union() {
+        // Flanges sit outside the belt zone — not touched by the tooth cutters.
+        for (sz = [-1, 1])
+            translate([0, 0, sz * (h_pul/2 + flange_h/2)])
+                difference() {
+                    cylinder(r = innPulleyR + 1.5, h = flange_h, center = true, $fn = 64);
+                    cylinder(d = innB_id + 0.2,    h = flange_h + 1, center = true, $fn = 32);
+                }
+        // Belt zone: cylinder with teeth cut in and shaft bore through.
+        difference() {
+            cylinder(r = innPulleyR, h = h_pul, center = true, $fn = 64);
+            cylinder(d = innB_id + 0.2, h = h_pul + 4, center = true, $fn = 32);
+            for (i = [1 : innerGT2Teeth])
+                rotate([0, 0, i * (360 / innerGT2Teeth)])
+                    translate([0, -inn_gt2_tooth_r, 0])
+                        scale([gt2_tooth_width_scale, 1, 1])
+                            if ($preview) gt2_5mm_tooth_preview(h_pul);
+                            else          gt2_5mm_tooth(h_pul);
+        }
+    }
 }
 
 use <primitives.scad>
@@ -386,23 +414,11 @@ module bearings() {
         color("yellow")
             translate([0, 0, (shaftTop + shaftBot) / 2])
                 cylinder(d = innB_id, h = shaftTop - shaftBot, center = true, $fn = 48);
-        // GT2 pulley proxy: belt rim + flanges + shaft bore.
-        // Pitch radius = innPulleyR; rim height = innPulleyH; flanges add 1 mm each side.
+        // Inner shaft GT2 5mm pulley — sourced part proxy with correct tooth profile.
         color("silver")
         translate([0, 0, zPul])
         rotate([0, 0, -(rpm_demo * 360 * $t) / N])
-        difference() {
-            union() {
-                // Belt rim
-                cylinder(r = innPulleyR, h = innPulleyH, center = true, $fn = 64);
-                // Top and bottom flanges (prevent belt walking off)
-                for (sz = [-1, 1])
-                    translate([0, 0, sz * (innPulleyH / 2)])
-                        cylinder(r = innPulleyR + 1, h = 1, center = true, $fn = 64);
-            }
-            // Shaft bore
-            cylinder(d = innB_id + 0.2, h = innPulleyH + 4, center = true, $fn = 32);
-        }
+            innPulley(innPulleyH);
     }
 }
 
