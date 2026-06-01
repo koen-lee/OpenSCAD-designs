@@ -93,7 +93,7 @@ innPulleyH  = 10;   // axial height of the inner shaft sourced pulley (mm)
 // "harness" : rotors + bearing plates + bearings + inner shaft (3D check)
 // "cross"   : horizontal cross-sections at several Z heights (frozen at t=0.2)
 // "plate"   : the reprintable bearing plate alone (for printing/inspection)
-mode = "cross"; // [pair, harness, cross, bottom_plate, top_plate]
+mode = "cross"; // [pair, harness, cross, bottom_plate, top_plate, all]
 
 /* [Cross-section] */
 nSlices    = 5;     // number of cross-section slices
@@ -309,7 +309,7 @@ module bearingProxy(id, od, w) {
 // Boss at centre (OD = outB_id) seats the outer bearing inner race, rotor grips
 // the outer race. Inner shaft clearance hole at the offset axis.
 module topPlate() {
-    plateR = rotorOuterR + wall + e;
+    plateR = rotorOuterR + wall;
     bossH  = outB_w;
     color([0.85, 0.8, 0.7])
     difference() {
@@ -339,7 +339,7 @@ module topPlate() {
 // pocketDepth and ductR are derived above (before use <primitives.scad>).
 
 module bottomPlate() {
-    plateR  = rotorOuterR + wall + e;
+    plateR  = rotorOuterR + wall;
     // The plate provides a cylindrical BOSS (OD = outB_id) that the bearing inner
     // race slides onto (clearance/light press). The outer race is gripped by the
     // matching pocket in the outer rotor, so the rotor rides this bearing.
@@ -357,6 +357,12 @@ module bottomPlate() {
             // Boss protruding into rotor space from rotor-facing face (+botPlateT/2)
             translate([0, 0, botPlateT / 2 + bossH / 2])
                 cylinder(d = outB_id, h = bossH, center = true, $fn = 120);
+            
+            translate([0, 0, 15])
+            difference() {
+                cylinder(r = plateR, h = botPlateT, center = true, $fn=256);
+                cylinder(r = rotorOuterR + (pinOut - pinIn), h = botPlateT+1, center = true, $fn=256);
+            }
         }
 
         // Kidney arc recesses in the plate body (open on rotor-facing side)
