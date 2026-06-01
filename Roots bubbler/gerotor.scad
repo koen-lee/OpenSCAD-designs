@@ -54,12 +54,13 @@ outB_w  = 7;
 topPlateT = outB_w + 4;  // just bearing width + a little wall each side
 
 /* [Labyrinth seal] */
-// Shallow circumferential grooves on the outer rotor OD that mesh with matching
-// ridges on the housing bore to restrict axial leakage without contact friction.
-// Set labN = 0 to disable (plain close-clearance gap).
-labN     = 3;    // number of labyrinth groove pairs
-labDepth = 0.6;  // groove depth (mm) — also the housing ridge height
-labWidth = 1.2;  // groove width (mm)
+// Triangular (V-groove) circumferential grooves on the outer rotor OD.
+// 45° flanks (width = 2×depth) make each groove self-supporting on FDM without supports.
+// Grooves are clustered at the bottom end of the mesh zone where leakage pressure is highest.
+// Set labN = 0 to disable.
+labN     = 8;    // number of grooves
+labDepth = 0.6;  // groove depth (mm); width = 2×depth for 45° flanks
+labPitch = 1.8;  // centre-to-centre spacing (mm); keep ≥ 2×labDepth to leave a land
 
 /* [Ports] */
 portID   = 15;   // hose inner Ø to match (mm) — see design_constraints 
@@ -225,15 +226,19 @@ module outerRotor() {
         // GT2 tooth gaps — cut into the top stub surface.
         translate([0, 0, (hMesh / 2 + hPort / 2)])
             gt2Ring(gt2RimH);
-        // Labyrinth seal grooves on the meshing zone OD only.
+        // Labyrinth seal grooves — triangular V-profile for 45° FDM printability.
+        // First groove centred on the bottom edge of the rotor, stacking upward.
+        // The bottom-most groove also bevels the sharp corner.
         if (labN > 0) {
-            labSpacing = hMesh / (labN + 1);
-            for (i = [1 : labN])
-                translate([0, 0, -hMesh / 2 + i * labSpacing])
-                    difference() {
-                        cylinder(r = rotorOuterR + 0.1, h = labWidth, center = true, $fn = 120);
-                        cylinder(r = rotorOuterR - labDepth, h = labWidth + 1, center = true, $fn = 120);
-                    }
+            labZ0 = -hRotor / 2;   // rotor bottom edge
+            for (i = [0 : labN - 1])
+                translate([0, 0, labZ0 + i * labPitch])
+                    rotate_extrude($fn = 120)
+                        polygon([
+                            [rotorOuterR - labDepth, 0],
+                            [rotorOuterR + 0.01,  labDepth],
+                            [rotorOuterR + 0.01, -labDepth],
+                        ]);
         }
     }
 }
