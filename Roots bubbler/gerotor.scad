@@ -88,6 +88,18 @@ portArc    = 90;  // deg, angular width of each kidney
 gt2RimH     = 12;   // axial height of the GT2 belt region on the outer rotor (mm)
 innPulleyH  = 10;   // axial height of the inner shaft sourced pulley (mm)
 
+/* [Mounting foot] */
+// Foot bolts the bearing end-plates to a flat plate (XZ plane = Y=0).
+// The foot underside is flush with the lowest point of the bearing plate OD,
+// placing the rotation axis (Z) horizontal, parallel to the mounting plate.
+// Slots run in Z so you can shift the rotor axially to tune the axial gap.
+footW      = 24;   // foot width in X (each side of centreline), total = 2×footW
+footT      = 8;    // foot thickness in Y (from plate OD to bottom face)
+footSlotW  = 5;    // bolt slot width (mm) — M4 clearance
+footSlotL  = 12;   // slot length in Z (mm) — axial adjustment range
+footSlotD  = 4;    // counterbore depth for bolt head/washer (mm)
+footSlotCD = 9;    // counterbore diameter (mm) — fits M4 washer
+
 /* [Output] */
 // "pair"    : meshing rotor pair + bearings
 // "harness" : rotors + bearing plates + bearings + inner shaft (3D check)
@@ -457,9 +469,67 @@ module crossSections() {
     }
 }
 
+// ---- Mounting foot ----------------------------------------------------------
+// Adds a flat foot to an end plate so it can be bolted to a flat plate lying
+// in the XZ plane (rotation axis Z horizontal).  The foot underside sits at
+// Y = -(plateR), flush with the lowest point of the plate cylinder.
+// Two bolt slots per foot, symmetric about Z=0, running in Z for axial adjustment.
+module mountingFoot(plateR, plateT) {
+    footH    = plateT;          // foot spans the full plate thickness in Z
+    footBotY = -plateR;         // bottom of plate cylinder = foot underside
+    footTopY = footBotY + footT;// top of foot merges into plate body
+
+    // Two ears, one on each side in X
+    for (mirr = [0, 1])
+    mirror([mirr,0,0]) {
+        translate([(plateR - footW / 2), footBotY + footT / 2, 0])
+        {
+            difference() {
+                // Foot block
+                cube([footW, footT, footH], center = true);
+                // Two elongated bolt slots per ear, symmetric about Z
+                for (sz = [-1, 1])
+                translate([4, 0, sz * (footH / 4)])
+                union() {
+                    // Clearance slot through full thickness
+                    translate([0, 0, 0])
+                        cube([footSlotW, footT + 1, footSlotL], center = true);
+                    // Counterbore from bottom face
+                    translate([0, -(footT / 2 - footSlotD / 2 + 0.5), 0])
+                        cube([footSlotCD, footSlotD + 1, footSlotL], center = true);
+                }
+            }
+            
+            translate([(-footW / 2), 0, -(footH)/2])
+            {
+                cube([footW, footW, 1]);
+            }
+        }
+    }
+}
+
+module bottomPlateWithFoot() {
+    plateR = rotorOuterR + wall;
+    union() {
+        bottomPlate();
+        color([0.7, 0.75, 0.85])
+            mountingFoot(plateR, botPlateT);
+    }
+}
+
+module topPlateWithFoot() {
+    plateR = rotorOuterR + wall;
+    union() {
+        topPlate();
+        color([0.7, 0.75, 0.85])
+            mirror([0,0,1])
+            mountingFoot(plateR, topPlateT);
+    }
+}
+
 // ---- Output dispatch --------------------------------------------------------
-if      (mode == "top_plate")    topPlate();
-else if (mode == "bottom_plate") bottomPlate();
+if      (mode == "top_plate")    topPlateWithFoot();
+else if (mode == "bottom_plate") bottomPlateWithFoot();
 else if (mode == "harness")      harness();
 else if (mode == "cross")        crossSections();
 else if (mode == "pair")         pair();
