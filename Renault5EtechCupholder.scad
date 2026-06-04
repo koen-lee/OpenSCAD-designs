@@ -21,18 +21,27 @@ intersection(){
             translate([thick, thick,-0.05])
         rounded_rect(width-2*thick, length-2*thick, thick+0.1, 7-thick );
         }
-        translate([(70+thick)/2,25,35])
+        translate([(72+thick)/2,28,35])
         rotate([20,0,0])
         difference(){
             union(){
                 cylinder(d1=70+thick, d2=80+2, h=50, center=true);
                 translate([0,0,-45])
-                cylinder(d=70+thick, h=100, center=true);
+                difference() {
+                    cylinder(d=70+1, h=100, center=true);
+                    cylinder(d=70, h=100+0.1, center=true);
+                }
+                rotate([-10,0])
+                translate([-(72+thick)/2,25,-45])
+                {
+                    cube([width,2,25]);
+                }
             }
             cylinder(d1=70, d2=79.5, h=50+0.1, center=true);
-            translate([0,0,-45])
-            cylinder(d=70, h=100+0.1, center=true);
         }
+        translate([8,length-thick])
+        rotate([-20,0,0])
+        cube([40,2,15]);
     }
     translate([0,0,400])
     cube(800, center=true);
